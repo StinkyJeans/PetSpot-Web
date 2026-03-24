@@ -1,7 +1,7 @@
 export default function FeedRightSidebar({ children = null }) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">
+      <section className="rounded-3xl p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-zinc-900">Trending Pack Members</h2>
         </div>

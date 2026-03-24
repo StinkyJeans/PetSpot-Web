@@ -37,10 +37,10 @@ export default function FeedLeftSidebar({
 
   return (
     <div className="space-y-4">
-      <div className="mb-3 flex min-h-[65vh] flex-col rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm lg:mb-0 lg:h-full lg:min-h-0">
+      <div className="mb-3 flex min-h-[65vh] flex-col rounded-3xl p-4 lg:mb-0 lg:h-full lg:min-h-0">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
+            <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50">
               {profileImageUrl ? (
                 <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -61,7 +61,7 @@ export default function FeedLeftSidebar({
                     className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
                       item.id === active
                         ? "bg-emerald-100/80 text-emerald-950"
-                        : "text-zinc-700 hover:bg-white/80"
+                        : "text-zinc-700 hover:bg-emerald-100/40"
                     }`}
                   >
                     <Icon size={20} color="currentColor" />
@@ -73,7 +73,7 @@ export default function FeedLeftSidebar({
           </ul>
         </div>
 
-        <div className="mt-auto border-t border-emerald-100 pt-4">
+        <div className="mt-auto pt-6">
           <div className="space-y-2">
             <Link
               href="/feed#create"

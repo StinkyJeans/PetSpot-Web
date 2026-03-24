@@ -24,12 +24,16 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       {toast ? (
-        <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div
+          className="pointer-events-none fixed top-4 right-4 z-[100] flex max-w-[min(22rem,calc(100vw-2rem))] justify-end sm:top-6 sm:right-6"
+          aria-live="polite"
+          role="status"
+        >
           <div
-            className={`max-w-md rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+            className={`pointer-events-auto w-full rounded-2xl border px-4 py-3 text-sm font-semibold shadow-lg ${
               toast.type === "error"
-                ? "border border-red-200 bg-red-50 text-red-700"
-                : "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                ? "border-red-200 bg-red-50 text-red-700"
+                : "border-emerald-200 bg-emerald-50 text-emerald-800"
             }`}
           >
             {toast.message}

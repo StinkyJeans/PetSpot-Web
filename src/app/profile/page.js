@@ -3,8 +3,15 @@ import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
 import { getEventSectionsForUserId } from "@/lib/events/server";
+import { aggregatePostEngagement } from "@/lib/feed/aggregate-engagement";
+import { enrichPostsWithShared } from "@/lib/feed/enrich-shared-posts";
 import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+
+const profilePostsSelect =
+  "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location),shared_post:posts!posts_shared_post_id_fkey(id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location))";
+const profilePostsBaseSelect =
+  "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location)";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -34,23 +41,31 @@ export default async function ProfilePage() {
   let posts = null;
   const withShared = await supabase
     .from("posts")
-    .select("id, media_url, image_url, media_kind, created_at, shared_post:posts!posts_shared_post_id_fkey(id, media_url, image_url, media_kind)")
+    .select(profilePostsSelect)
     .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
+
   if (withShared.error) {
     const fallback = await supabase
       .from("posts")
-      .select("id, media_url, image_url, media_kind, created_at")
+      .select(profilePostsBaseSelect)
       .eq("owner_id", user.id)
-      .order("created_at", { ascending: false });
-    posts = fallback.data ?? [];
+      .order("created_at", { ascending: false })
+      .limit(100);
+    posts = await enrichPostsWithShared(supabase, fallback.data ?? []);
   } else {
-    posts = withShared.data ?? [];
+    posts = await enrichPostsWithShared(supabase, withShared.data ?? []);
   }
+
+  const postRows = posts ?? [];
+  const postIds = postRows.map((p) => p.id);
+  const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, user.id);
+  const viewerAvatar = profile?.profile_image_url ?? "";
 
   const galleryImageItems = [];
   const galleryVideoItems = [];
-  for (const p of posts ?? []) {
+  for (const p of postRows) {
     const url = p.media_url || p.image_url || p.shared_post?.media_url || p.shared_post?.image_url;
     if (!url) continue;
     const kind = p.media_kind || p.shared_post?.media_kind;
@@ -60,6 +75,18 @@ export default async function ProfilePage() {
       galleryImageItems.push({ id: p.id, url, kind: "image" });
     }
   }
+
+  const postFeedItems = postRows.map((post) => {
+    const c = counts[post.id] ?? { likes: 0, comments: 0, shares: 0 };
+    return {
+      post,
+      likeCount: c.likes,
+      commentCount: c.comments,
+      shareCount: c.shares,
+      liked: liked.has(post.id),
+      shared: shared.has(post.id),
+    };
+  });
   const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
   const sidebarProfileName = formatProfileHeadline(profile?.owner_display_name, profile?.pet_name);
 
@@ -94,6 +121,9 @@ export default async function ProfilePage() {
             followingCount={followingCount ?? 0}
             galleryImageItems={galleryImageItems}
             galleryVideoItems={galleryVideoItems}
+            postFeedItems={postFeedItems}
+            viewerUserId={user.id}
+            viewerPetAvatarUrl={viewerAvatar}
           />
         </main>
 

@@ -43,7 +43,7 @@ export default function ViewAllEvent({
         ) : (
           <div className="max-h-[65vh] space-y-3 overflow-auto pr-1">
             {events.map((item) => (
-              <article key={item.id ?? `${item.title}-${item.when}`} className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-3">
+              <article key={item.id ?? `${item.title}-${item.when}`} className="rounded-2xl p-3">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-zinc-900">{item.title}</p>
                   {onEdit ? (

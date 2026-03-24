@@ -8,7 +8,7 @@ import { useToast } from "@/components/feedback/toast-provider";
 
 function EventCard({ item, showAuthor = false, onEdit }) {
   return (
-    <article className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-3">
+    <article className="rounded-2xl p-3">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-zinc-900">{item.title}</p>
         {onEdit ? (
@@ -49,7 +49,7 @@ export default function EventSection({ myEvents = [], otherEvents = [], classNam
   }, [myEvents]);
 
   return (
-    <section className={`rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm ${className}`}>
+    <section className={`rounded-3xl p-4 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-zinc-900">Event section</h3>
         <button
@@ -100,7 +100,7 @@ export default function EventSection({ myEvents = [], otherEvents = [], classNam
                   type="button"
                   disabled={myEventsPage <= 0}
                   onClick={() => setMyEventsPage((p) => Math.max(0, p - 1))}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 disabled:opacity-50"
+                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -111,7 +111,7 @@ export default function EventSection({ myEvents = [], otherEvents = [], classNam
                   type="button"
                   disabled={myEventsPage >= maxPage}
                   onClick={() => setMyEventsPage((p) => Math.min(maxPage, p + 1))}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 disabled:opacity-50"
+                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Next
                 </button>

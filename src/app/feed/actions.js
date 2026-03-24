@@ -289,7 +289,7 @@ export async function deletePost(formData) {
 
   revalidatePath("/feed");
   revalidatePath("/profile");
-  return { error: "" };
+  return { ok: true };
 }
 
 /** Records a share (one per user per post; duplicates ignored). */

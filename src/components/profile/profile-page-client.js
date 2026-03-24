@@ -35,6 +35,9 @@ export default function ProfilePageClient({
   followingCount,
   galleryImageItems,
   galleryVideoItems,
+  postFeedItems = [],
+  viewerUserId,
+  viewerPetAvatarUrl,
 }) {
   const [showStatsDetails, setShowStatsDetails] = useState(false);
 
@@ -49,7 +52,13 @@ export default function ProfilePageClient({
         backgroundImageUrl={backgroundImageUrl}
         onViewStatsDetails={() => setShowStatsDetails(true)}
       />
-      <ProfileGallery imageItems={galleryImageItems} videoItems={galleryVideoItems} />
+      <ProfileGallery
+        imageItems={galleryImageItems}
+        videoItems={galleryVideoItems}
+        postFeedItems={postFeedItems}
+        viewerUserId={viewerUserId}
+        viewerPetAvatarUrl={viewerPetAvatarUrl}
+      />
 
       <ViewStatsDetailsModal
         isOpen={showStatsDetails}

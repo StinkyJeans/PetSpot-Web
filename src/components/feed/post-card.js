@@ -190,7 +190,10 @@ export default function PostCard({
                         return;
                       }
                       notifyDeleted();
-                      router.refresh();
+                      // Defer refresh so the toast can commit and paint (immediate refresh can hide it).
+                      window.setTimeout(() => {
+                        router.refresh();
+                      }, 150);
                     });
                   }}
                 >
