@@ -17,6 +17,9 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+OSM_GEOCODER_BASE_URL=https://nominatim.openstreetmap.org
+# Optional: for hosted Nominatim-compatible providers that require a key
+OSM_GEOCODER_API_KEY=
 ```
 
 3. In your Supabase project, run the SQL migrations in:
@@ -28,6 +31,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `supabase/migrations/202603240005_profile_about_follows.sql` (about/details fields, follower counts)
 - `supabase/migrations/202603240006_unify_profile_columns.sql` (owner name, pet birthday, favorite place; migrates legacy `birthday` → `pet_birthday`)
 - `supabase/migrations/202603240007_pet_profiles_public_read.sql` (read profiles in feed / joins)
+- `supabase/migrations/202603240008_create_events.sql` (event creation + sidebar event card)
+- `supabase/migrations/202603240009_events_public_read.sql` (shared event section: own + other users' events)
 
 **Profile model:** The `pet_profiles` table is one row per user combining **you + your primary pet** (owner fields + pet fields). The UI treats it as a single social profile.
 

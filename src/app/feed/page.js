@@ -4,6 +4,7 @@ import FeedStories from "@/components/feed/feed-stories";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import PostCard from "@/components/feed/post-card";
 import PostComposer from "@/components/feed/post-composer";
+import { getEventSectionsForUserId } from "@/lib/events/server";
 import { aggregatePostEngagement } from "@/lib/feed/aggregate-engagement";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -31,6 +32,7 @@ export default async function FeedPage() {
   const postRows = posts ?? [];
   const postIds = postRows.map((p) => p.id);
   const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, user.id);
+  const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
 
   const viewerAvatar = primaryPet?.profile_image_url ?? "";
 
@@ -38,7 +40,7 @@ export default async function FeedPage() {
     <div className="min-h-screen bg-[#F1F8F1]">
       <FeedTopNav active="feed" />
 
-      <FeedShell>
+      <FeedShell myEvents={myEvents} otherEvents={otherEvents}>
         <FeedStories />
         <div id="create">
           <PostComposer />

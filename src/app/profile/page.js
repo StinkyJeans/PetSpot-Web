@@ -2,6 +2,7 @@ import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
+import { getEventSectionsForUserId } from "@/lib/events/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function ProfilePage() {
@@ -46,6 +47,7 @@ export default async function ProfilePage() {
       galleryImageItems.push({ id: p.id, url, kind: "image" });
     }
   }
+  const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
@@ -53,7 +55,7 @@ export default async function ProfilePage() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-12">
         <aside className="hidden lg:col-span-3 lg:block">
-          <FeedLeftSidebar hasEvent={false} />
+          <FeedLeftSidebar myEvents={myEvents} otherEvents={otherEvents} />
         </aside>
 
         <main className="lg:col-span-6">
