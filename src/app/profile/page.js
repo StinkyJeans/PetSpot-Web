@@ -3,6 +3,7 @@ import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
 import { getEventSectionsForUserId } from "@/lib/events/server";
+import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function ProfilePage() {
@@ -48,17 +49,24 @@ export default async function ProfilePage() {
     }
   }
   const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
+  const sidebarProfileName = formatProfileHeadline(profile?.owner_display_name, profile?.pet_name);
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
       <FeedTopNav active="profile" />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-12">
-        <aside className="hidden lg:col-span-3 lg:block">
-          <FeedLeftSidebar myEvents={myEvents} otherEvents={otherEvents} />
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_2fr_1fr]">
+        <aside className="hidden lg:block">
+          <div className="lg:fixed lg:bottom-4 lg:left-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
+            <FeedLeftSidebar
+              showEventSection={false}
+              profileName={sidebarProfileName}
+              profileImageUrl={profile?.profile_image_url ?? ""}
+            />
+          </div>
         </aside>
 
-        <main className="lg:col-span-6">
+        <main>
           <ProfilePageClient
             ownerDisplayName={profile?.owner_display_name ?? ""}
             petName={profile?.pet_name ?? "Pet"}
@@ -77,17 +85,14 @@ export default async function ProfilePage() {
           />
         </main>
 
-        <aside className="lg:col-span-3">
-          <ProfileRightPanel
-            ownerDisplayName={profile?.owner_display_name ?? ""}
-            location={profile?.location ?? ""}
-            aboutMe={profile?.about_me ?? ""}
-            favoritePlace={profile?.favorite_place ?? ""}
-            favoriteToy={profile?.favorite_toy ?? ""}
-            petBirthday={profile?.pet_birthday ?? null}
-            followerCount={followerCount ?? 0}
-            followingCount={followingCount ?? 0}
-          />
+        <aside>
+          <div className="lg:fixed lg:bottom-4 lg:right-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
+            <ProfileRightPanel
+              aboutMe={profile?.about_me ?? ""}
+              myEvents={myEvents}
+              otherEvents={otherEvents}
+            />
+          </div>
         </aside>
       </div>
     </div>

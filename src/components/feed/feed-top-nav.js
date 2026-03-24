@@ -22,8 +22,9 @@ export default function FeedTopNav({ active }) {
   return (
     <header className="sticky top-0 z-20 border-b border-emerald-100/80 bg-[#F1F8F1]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <Link href="/feed" className="text-xl font-bold tracking-tight text-emerald-950">
-          PetSpot
+        <Link href="/feed" className="leading-tight">
+          <span className="block text-xl font-bold tracking-tight text-emerald-950">PetSpot</span>
+          <span className="block text-[11px] font-medium text-emerald-800/90">Discover the pack</span>
         </Link>
 
         <div className="order-3 flex w-full min-w-[200px] max-w-xl flex-1 items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 shadow-sm md:order-none md:w-auto">

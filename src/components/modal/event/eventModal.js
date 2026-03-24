@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useToast } from "@/components/feedback/toast-provider";
 
 const initialForm = {
@@ -24,20 +25,31 @@ export default function EventModal({
   submitLabel = "Create event",
   initialData = null,
 }) {
+  const [mounted, setMounted] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [countryOptions, setCountryOptions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const onCloseRef = useRef(onClose);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
     function onKeyDown(e) {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") onCloseRef.current?.();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,7 +122,7 @@ export default function EventModal({
     };
   }, [form.city, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -132,9 +144,15 @@ export default function EventModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-      <div className="w-full max-w-lg rounded-3xl border border-emerald-100 bg-white p-5 shadow-xl">
+  const modal = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-3xl border border-emerald-100 bg-white p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
           <button
@@ -270,4 +288,5 @@ export default function EventModal({
       </div>
     </div>
   );
+  return createPortal(modal, document.body);
 }

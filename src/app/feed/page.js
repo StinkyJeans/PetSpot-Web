@@ -6,6 +6,7 @@ import PostCard from "@/components/feed/post-card";
 import PostComposer from "@/components/feed/post-composer";
 import { getEventSectionsForUserId } from "@/lib/events/server";
 import { aggregatePostEngagement } from "@/lib/feed/aggregate-engagement";
+import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function FeedPage() {
@@ -15,7 +16,7 @@ export default async function FeedPage() {
 
   const { data: primaryPet } = await supabase
     .from("pet_profiles")
-    .select("id,profile_image_url,background_image_url,pet_name")
+    .select("id,profile_image_url,background_image_url,pet_name,owner_display_name")
     .eq("owner_id", user.id)
     .eq("is_primary", true)
     .limit(1)
@@ -35,12 +36,18 @@ export default async function FeedPage() {
   const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
 
   const viewerAvatar = primaryPet?.profile_image_url ?? "";
+  const sidebarProfileName = formatProfileHeadline(primaryPet?.owner_display_name, primaryPet?.pet_name);
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
       <FeedTopNav active="feed" />
 
-      <FeedShell myEvents={myEvents} otherEvents={otherEvents}>
+      <FeedShell
+        myEvents={myEvents}
+        otherEvents={otherEvents}
+        profileName={sidebarProfileName}
+        profileImageUrl={viewerAvatar}
+      >
         <FeedStories />
         <div id="create">
           <PostComposer />

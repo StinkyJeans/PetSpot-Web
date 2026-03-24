@@ -1,4 +1,4 @@
-export default function FeedRightSidebar() {
+export default function FeedRightSidebar({ children = null }) {
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">
@@ -7,6 +7,8 @@ export default function FeedRightSidebar() {
         </div>
         <p className="mt-4 text-center text-sm text-zinc-500">No suggestions yet.</p>
       </section>
+
+      {children}
 
       <footer className="px-1 text-center text-xs text-zinc-400">
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateBackgroundPicture, updateProfilePicture } from "@/app/feed/actions";
 import { formatProfileHeadline } from "@/lib/profile";
-import { CheckVerified, Plus } from "griddy-icons";
+import { CheckVerified, MenuAlt03, Plus } from "griddy-icons";
 
 export default function ProfileHero({
   ownerDisplayName,
@@ -13,7 +13,7 @@ export default function ProfileHero({
   location,
   profileImageUrl,
   backgroundImageUrl,
-  onEditProfile,
+  onViewStatsDetails,
 }) {
   const router = useRouter();
   const [uploadError, setUploadError] = useState("");
@@ -198,14 +198,14 @@ export default function ProfileHero({
               </div>
             </div>
           </div>
-
           <div className="flex shrink-0 flex-wrap gap-2 pt-14 sm:pt-16">
             <button
               type="button"
-              onClick={onEditProfile}
-              className="rounded-full bg-emerald-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-950"
+              onClick={onViewStatsDetails}
+              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-100"
             >
-              Edit profile
+              <MenuAlt03 size={14} />
+              View Stats and Details
             </button>
           </div>
         </div>

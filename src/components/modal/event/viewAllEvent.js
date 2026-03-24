@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 export default function ViewAllEvent({
   isOpen,
   onClose,
@@ -7,11 +10,23 @@ export default function ViewAllEvent({
   events = [],
   onEdit,
 }) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-      <div className="w-full max-w-2xl rounded-3xl border border-emerald-100 bg-white p-5 shadow-xl">
+  if (!isOpen || !mounted) return null;
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-3xl border border-emerald-100 bg-white p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
           <button
@@ -51,4 +66,5 @@ export default function ViewAllEvent({
       </div>
     </div>
   );
+  return createPortal(modal, document.body);
 }
