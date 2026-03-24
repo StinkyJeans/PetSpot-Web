@@ -31,18 +31,30 @@ export default async function ProfilePage() {
     .select("*", { count: "exact", head: true })
     .eq("follower_id", user.id);
 
-  const { data: posts } = await supabase
+  let posts = null;
+  const withShared = await supabase
     .from("posts")
-    .select("id, media_url, image_url, media_kind, created_at")
+    .select("id, media_url, image_url, media_kind, created_at, shared_post:posts!posts_shared_post_id_fkey(id, media_url, image_url, media_kind)")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
+  if (withShared.error) {
+    const fallback = await supabase
+      .from("posts")
+      .select("id, media_url, image_url, media_kind, created_at")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+    posts = fallback.data ?? [];
+  } else {
+    posts = withShared.data ?? [];
+  }
 
   const galleryImageItems = [];
   const galleryVideoItems = [];
   for (const p of posts ?? []) {
-    const url = p.media_url || p.image_url;
+    const url = p.media_url || p.image_url || p.shared_post?.media_url || p.shared_post?.image_url;
     if (!url) continue;
-    if (p.media_kind === "video") {
+    const kind = p.media_kind || p.shared_post?.media_kind;
+    if (kind === "video") {
       galleryVideoItems.push({ id: p.id, url, kind: "video" });
     } else {
       galleryImageItems.push({ id: p.id, url, kind: "image" });

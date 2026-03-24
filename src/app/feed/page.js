@@ -9,6 +9,33 @@ import { aggregatePostEngagement } from "@/lib/feed/aggregate-engagement";
 import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
+const sharedPostDetailSelect =
+  "id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location)";
+
+/**
+ * When the nested embed fails (wrong FK hint, PostgREST edge), shared_post_id is still set.
+ * Batch-load originals so sharer vs original author always resolves (Facebook-style).
+ */
+async function enrichPostsWithShared(supabase, rows) {
+  if (!rows?.length) return rows;
+  const need = rows.filter((r) => {
+    if (!r.shared_post_id) return false;
+    if (r.shared_post == null) return true;
+    if (Array.isArray(r.shared_post) && r.shared_post.length === 0) return true;
+    return false;
+  });
+  if (!need.length) return rows;
+  const ids = [...new Set(need.map((r) => r.shared_post_id).filter(Boolean))];
+  const { data: originals, error } = await supabase.from("posts").select(sharedPostDetailSelect).in("id", ids);
+  if (error || !originals?.length) return rows;
+  const map = Object.fromEntries(originals.map((o) => [o.id, o]));
+  return rows.map((r) =>
+    r.shared_post_id && r.shared_post == null && map[r.shared_post_id]
+      ? { ...r, shared_post: map[r.shared_post_id] }
+      : r,
+  );
+}
+
 export default async function FeedPage() {
   const user = await requireUser();
   await requirePrimaryPetProfile(user.id);
@@ -22,13 +49,30 @@ export default async function FeedPage() {
     .limit(1)
     .maybeSingle();
 
-  const { data: posts } = await supabase
+  let posts = null;
+  // Must use FK constraint name: plain `posts!shared_post_id` can resolve the inverse edge (child reshares)
+  // and swap captions. `posts_shared_post_id_fkey` is the default PG name for shared_post_id -> posts(id).
+  const sharedSelect =
+    "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location),shared_post:posts!posts_shared_post_id_fkey(id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location))";
+  const baseSelect =
+    "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location)";
+
+  const withShared = await supabase
     .from("posts")
-    .select(
-      "id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location)",
-    )
+    .select(sharedSelect)
     .order("created_at", { ascending: false })
     .limit(20);
+
+  if (withShared.error) {
+    const fallback = await supabase
+      .from("posts")
+      .select(baseSelect)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    posts = await enrichPostsWithShared(supabase, fallback.data ?? []);
+  } else {
+    posts = await enrichPostsWithShared(supabase, withShared.data ?? []);
+  }
 
   const postRows = posts ?? [];
   const postIds = postRows.map((p) => p.id);
@@ -70,6 +114,7 @@ export default async function FeedPage() {
                   liked={liked.has(post.id)}
                   shared={shared.has(post.id)}
                   viewerPetAvatarUrl={viewerAvatar}
+                  viewerUserId={user.id}
                 />
               );
             })

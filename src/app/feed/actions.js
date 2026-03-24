@@ -273,6 +273,25 @@ export async function togglePostLike(formData) {
   revalidatePath("/feed");
 }
 
+export async function deletePost(formData) {
+  const user = await requireUser();
+  const postId = String(formData.get("postId") ?? "").trim();
+  if (!postId) {
+    return { error: "Missing post." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+  const { error } = await supabase.from("posts").delete().eq("id", postId).eq("owner_id", user.id);
+
+  if (error) {
+    return { error: error.message || "Could not delete post." };
+  }
+
+  revalidatePath("/feed");
+  revalidatePath("/profile");
+  return { error: "" };
+}
+
 /** Records a share (one per user per post; duplicates ignored). */
 export async function recordPostShare(formData) {
   const user = await requireUser();
@@ -287,6 +306,70 @@ export async function recordPostShare(formData) {
   }
 
   revalidatePath("/feed");
+  return { error: "" };
+}
+
+export async function sharePost(prevOrForm, maybeForm) {
+  const formData = getFormData(prevOrForm, maybeForm);
+  if (!formData) {
+    return { error: "Invalid request." };
+  }
+  const user = await requireUser();
+  const originalPostId = String(formData.get("postId") ?? "").trim();
+  const caption = String(formData.get("caption") ?? "").trim();
+  if (!originalPostId) {
+    return { error: "Missing post." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+
+  const { data: originalPost, error: originalError } = await supabase
+    .from("posts")
+    .select("id")
+    .eq("id", originalPostId)
+    .limit(1)
+    .maybeSingle();
+
+  if (originalError || !originalPost?.id) {
+    return { error: "Post no longer exists." };
+  }
+
+  const { data: primaryPet, error: primaryError } = await supabase
+    .from("pet_profiles")
+    .select("id")
+    .eq("owner_id", user.id)
+    .eq("is_primary", true)
+    .limit(1)
+    .maybeSingle();
+
+  if (primaryError || !primaryPet?.id) {
+    return { error: "Primary pet profile not found. Complete onboarding again." };
+  }
+
+  const { error: shareInsertError } = await supabase.from("posts").insert({
+    owner_id: user.id,
+    pet_profile_id: primaryPet.id,
+    caption,
+    shared_post_id: originalPost.id,
+    image_url: null,
+    media_url: null,
+    media_kind: null,
+  });
+
+  if (shareInsertError) {
+    return { error: shareInsertError.message || "Could not share post." };
+  }
+
+  const { error: metricError } = await supabase
+    .from("post_shares")
+    .insert({ post_id: originalPost.id, user_id: user.id });
+
+  if (metricError && metricError.code !== "23505") {
+    return { error: metricError.message || "Could not record share." };
+  }
+
+  revalidatePath("/feed");
+  revalidatePath("/profile");
   return { error: "" };
 }
 
