@@ -144,7 +144,7 @@ export default function StoryViewerModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-black shadow-2xl"
+        className="relative w-full max-w-lg h-[90vh] overflow-hidden rounded-3xl bg-black shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Progress bars */}
@@ -196,6 +196,28 @@ export default function StoryViewerModal({
         {/* Tap zones */}
         <button
           type="button"
+          className="absolute left-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+          aria-label="Previous story"
+          onClick={(e) => {
+            e.stopPropagation();
+            goPrev();
+          }}
+        >
+          ‹
+        </button>
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+          aria-label="Next story"
+          onClick={(e) => {
+            e.stopPropagation();
+            goNext();
+          }}
+        >
+          ›
+        </button>
+        <button
+          type="button"
           className="absolute left-0 top-0 bottom-0 w-1/2 bg-transparent z-10"
           aria-label="Previous story"
           onClick={(e) => {
@@ -213,12 +235,12 @@ export default function StoryViewerModal({
           }}
         />
 
-        <div className="flex items-center justify-center bg-black">
+        <div className="flex h-full items-center justify-center bg-black">
           {currentStory.mediaKind === "video" ? (
             <video
               ref={videoRef}
               src={currentStory.mediaUrl}
-              className="max-h-[75vh] w-full object-contain"
+              className="h-full w-full object-contain"
               autoPlay
               playsInline
               muted
@@ -228,7 +250,7 @@ export default function StoryViewerModal({
             <img
               src={currentStory.mediaUrl}
               alt=""
-              className="max-h-[75vh] w-full object-contain"
+              className="h-full w-full object-contain"
             />
           )}
         </div>
