@@ -14,6 +14,9 @@ function normalizeStoryRow(s) {
     caption: s.caption ?? null,
     createdAt: s.created_at,
     expiresAt: s.expires_at,
+    // True for any story coming from the DB/realtime.
+    // Pending client-side placeholders can set this to `false`.
+    uploadComplete: true,
   };
 }
 

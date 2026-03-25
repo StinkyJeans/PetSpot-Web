@@ -1,24 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { recordStoryView } from "@/app/stories/actions";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/feedback/toast-provider";
 import { ChatBubble, Heart, ShareIos } from "griddy-icons";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function StoryViewerModal({
   stories,
   startIndex,
   onClose,
   onMarkSeen,
+  viewerUserId,
 }) {
   const { showToast } = useToast();
-  const [pending, startTransition] = useTransition();
   const lastRecordedRef = useRef(null);
+  const seenStoryIdsRef = useRef(new Set());
   const [currentIndex, setCurrentIndex] = useState(startIndex ?? 0);
   const [progressPct, setProgressPct] = useState(0);
   const [durationMs, setDurationMs] = useState(5000);
   const [durationReady, setDurationReady] = useState(false);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
   const videoRef = useRef(null);
+
+  function flushSeenToParent() {
+    const ids = Array.from(seenStoryIdsRef.current);
+    if (!ids.length) return;
+    onMarkSeen?.(ids);
+    seenStoryIdsRef.current.clear();
+  }
+
+  function handleClose() {
+    flushSeenToParent();
+    onClose();
+  }
 
   useEffect(() => {
     // Defer to avoid ESLint cascading-render warning.
@@ -38,21 +52,31 @@ export default function StoryViewerModal({
   }, [stories, currentIndex]);
 
   const currentStoryId = currentStory?.id;
+  const uploadComplete = currentStory?.uploadComplete ?? true;
 
   useEffect(() => {
     if (!currentStory?.id) return;
+    if (!viewerUserId) return;
+    if (currentStory.uploadComplete === false) return; // don’t count “views” until upload is complete
     if (lastRecordedRef.current === currentStory.id) return;
     lastRecordedRef.current = currentStory.id;
 
-    startTransition(async () => {
-      const r = await recordStoryView(currentStory.id);
-      if (r?.error) {
-        showToast(r.error, "error");
+    (async () => {
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.from("story_views").insert({
+        story_id: currentStory.id,
+        viewer_user_id: viewerUserId,
+      });
+
+      // Duplicate views are fine: unique PK handles it.
+      if (error && error.code !== "23505") {
+        showToast(error.message || "Could not record story view.", "error");
         return;
       }
-      onMarkSeen?.(currentStory.id);
-    });
-  }, [currentStory?.id, onMarkSeen, startTransition, showToast]);
+
+      seenStoryIdsRef.current.add(currentStory.id);
+    })();
+  }, [currentStory?.id, currentStory?.uploadComplete, viewerUserId, showToast]);
 
   const IMAGE_DURATION_MS = 5000;
   const MAX_VIDEO_DURATION_MS = 30000;
@@ -61,19 +85,32 @@ export default function StoryViewerModal({
     // Reset progress whenever story changes.
     queueMicrotask(() => {
       setProgressPct(0);
+      setMediaLoaded(false);
       setDurationReady(false);
 
       if (!currentStory) return;
 
-      if (currentStory.mediaKind === "video") {
-        // Wait for video metadata to compute real duration, then clamp.
-        setDurationMs(IMAGE_DURATION_MS);
-      } else {
-        setDurationMs(IMAGE_DURATION_MS);
-        setDurationReady(true);
-      }
+      // Keep default duration until media tells us otherwise.
+      setDurationMs(IMAGE_DURATION_MS);
     });
   }, [currentStory?.id, currentStory?.mediaKind]);
+
+  useEffect(() => {
+    // Only start progressing once BOTH:
+    // 1) the media has loaded enough to compute/play
+    // 2) the upload is marked complete
+    queueMicrotask(() => {
+      if (!mediaLoaded) {
+        setDurationReady(false);
+        return;
+      }
+      if (uploadComplete === false) {
+        setDurationReady(false);
+        return;
+      }
+      setDurationReady(true);
+    });
+  }, [mediaLoaded, uploadComplete]);
 
   useEffect(() => {
     if (!currentStory || !durationReady) return;
@@ -89,7 +126,7 @@ export default function StoryViewerModal({
       if (elapsed >= durationMs) {
         if (!stories?.length) return;
         if (currentIndex >= stories.length - 1) {
-          onClose();
+          handleClose();
           return;
         }
         setCurrentIndex((i) => i + 1);
@@ -106,7 +143,7 @@ export default function StoryViewerModal({
   function goNext() {
     if (!stories?.length) return;
     if (currentIndex >= stories.length - 1) {
-      onClose();
+      handleClose();
       return;
     }
     setCurrentIndex((i) => i + 1);
@@ -115,7 +152,7 @@ export default function StoryViewerModal({
   function goPrev() {
     if (!stories?.length) return;
     if (currentIndex <= 0) {
-      onClose();
+      handleClose();
       return;
     }
     setCurrentIndex((i) => i - 1);
@@ -127,11 +164,11 @@ export default function StoryViewerModal({
     const dur = Number(v.duration);
     if (!Number.isFinite(dur) || dur <= 0) {
       setDurationMs(IMAGE_DURATION_MS);
-      setDurationReady(true);
+      setMediaLoaded(true);
       return;
     }
     setDurationMs(Math.min(MAX_VIDEO_DURATION_MS, Math.floor(dur * 1000)));
-    setDurationReady(true);
+    setMediaLoaded(true);
   };
 
   if (!currentStory) return null;
@@ -141,7 +178,7 @@ export default function StoryViewerModal({
       className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-2 sm:items-center"
       role="dialog"
       aria-modal="true"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="relative w-full max-w-lg h-[90vh] overflow-hidden rounded-3xl bg-black shadow-2xl"
@@ -185,8 +222,7 @@ export default function StoryViewerModal({
           <button
             type="button"
             className="rounded-full bg-black/30 px-3 py-1 text-sm font-semibold text-white hover:bg-black/40"
-            onClick={onClose}
-            disabled={pending}
+            onClick={handleClose}
             aria-label="Close story"
           >
             ×
@@ -235,13 +271,22 @@ export default function StoryViewerModal({
           }}
         />
 
-        <div className="flex h-full items-center justify-center bg-black">
+        <div className="relative flex h-full items-center justify-center bg-black">
+          {uploadComplete === false ? (
+            <div className="pointer-events-none absolute inset-0 z-[12] flex items-center justify-center">
+              <div className="w-2/3 rounded-full bg-white/10 p-1">
+                <div className="h-1.5 w-1/3 animate-pulse rounded-full bg-white/70" />
+              </div>
+            </div>
+          ) : null}
           {currentStory.mediaKind === "video" ? (
             <video
               ref={videoRef}
               src={currentStory.mediaUrl}
-              className="h-full w-full object-contain"
-              autoPlay
+              className={`h-full w-full object-contain transition-all duration-200 ${
+                uploadComplete === false ? "blur-sm scale-105" : ""
+              }`}
+              autoPlay={uploadComplete}
               playsInline
               muted
               onLoadedMetadata={onVideoLoadedMetadata}
@@ -250,7 +295,13 @@ export default function StoryViewerModal({
             <img
               src={currentStory.mediaUrl}
               alt=""
-              className="h-full w-full object-contain"
+              className={`h-full w-full object-contain transition-all duration-200 ${
+                uploadComplete === false ? "blur-sm scale-105" : ""
+              }`}
+              onLoad={() => {
+                setDurationMs(IMAGE_DURATION_MS);
+                setMediaLoaded(true);
+              }}
             />
           )}
         </div>

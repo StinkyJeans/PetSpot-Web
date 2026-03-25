@@ -219,11 +219,38 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                       return;
                     }
 
+                    let storyId;
                     try {
-                      const storyId =
+                      storyId =
                         typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
                           ? crypto.randomUUID()
                           : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+                      // Optimistic placeholder so the user immediately sees
+                      // "their story is uploading" (blur + loading overlay in viewer).
+                      const nowIso = new Date().toISOString();
+                      const expiresIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                      setStories((prev) => {
+                        // Use existing viewer headline/avatar if present; fall back safely.
+                        const viewerExisting = prev.find((s) => s.ownerId === viewerUserId);
+                        const without = prev.filter((s) => s.id !== storyId);
+                        return [
+                          {
+                            id: storyId,
+                            ownerId: viewerUserId,
+                            mediaKind: kind,
+                            mediaUrl: selectedPreviewUrl, // object URL for immediate preview
+                            caption: null,
+                            createdAt: nowIso,
+                            expiresAt: expiresIso,
+                            authorHeadline: viewerExisting?.authorHeadline ?? "Story",
+                            authorAvatarUrl: viewerExisting?.authorAvatarUrl ?? "",
+                            viewerHasViewed: false,
+                            uploadComplete: false,
+                          },
+                          ...without,
+                        ].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+                      });
 
                       // Keep extension aligned with the actual file type so playback works.
                       const ext =
@@ -251,6 +278,7 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
 
                       if (upErr) {
                         showToast(upErr.message || "Could not upload story.", "error");
+                        setStories((prev) => prev.filter((s) => s.id !== storyId));
                         return;
                       }
 
@@ -267,15 +295,25 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                       const r = await createStory(null, fd);
                       if (r?.error) {
                         showToast(r.error, "error");
+                        setStories((prev) => prev.filter((s) => s.id !== storyId));
                         return;
                       }
 
                       const newStory = r.story;
                       if (newStory?.id) {
                         setStories((prev) => {
-                          // Avoid duplicates if realtime INSERT arrives first.
-                          const without = prev.filter((s) => s.id !== newStory.id);
-                          return [newStory, ...without].sort((a, b) =>
+                          // Replace the optimistic placeholder (keyed by client `storyId`),
+                          // and also guard against the realtime INSERT arriving first.
+                          const without = prev.filter(
+                            (s) => s.id !== storyId && s.id !== newStory.id,
+                          );
+                          return [
+                            {
+                              ...newStory,
+                              uploadComplete: true,
+                            },
+                            ...without,
+                          ].sort((a, b) =>
                             String(b.createdAt).localeCompare(String(a.createdAt)),
                           );
                         });
@@ -286,11 +324,14 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                       showToast("Story posted.", "success");
                     } catch (err) {
                       setUploadError(err?.message || "Could not post story.");
+                      if (storyId) {
+                        setStories((prev) => prev.filter((s) => s.id !== storyId));
+                      }
                     }
                   });
                 }}
               >
-                {uploadPending ? "Posting..." : "Post Story"}
+                Post Story
               </button>
             </div>
           </div>
@@ -301,11 +342,14 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
         <StoryViewerModal
           stories={playbackStories}
           startIndex={selectedStartIndex}
+          viewerUserId={viewerUserId}
           onClose={() => setSelectedOwnerId(null)}
-          onMarkSeen={(id) => {
+          onMarkSeen={(idsOrId) => {
+            const ids = Array.isArray(idsOrId) ? idsOrId : [idsOrId];
+            const idSet = new Set(ids);
             setStories((prev) =>
               prev.map((s) =>
-                s.id === id ? { ...s, viewerHasViewed: true } : s,
+                idSet.has(s.id) ? { ...s, viewerHasViewed: true } : s,
               ),
             );
           }}
