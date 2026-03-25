@@ -6,8 +6,8 @@ import { ChatBubble, Heart, ShareIos } from "griddy-icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function StoryViewerModal({
-  stories,
-  startIndex,
+  ownerGroups,
+  startOwnerId,
   onClose,
   onMarkSeen,
   viewerUserId,
@@ -15,7 +15,8 @@ export default function StoryViewerModal({
   const { showToast } = useToast();
   const lastRecordedRef = useRef(null);
   const seenStoryIdsRef = useRef(new Set());
-  const [currentIndex, setCurrentIndex] = useState(startIndex ?? 0);
+  const [currentOwnerIndex, setCurrentOwnerIndex] = useState(0);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [progressPct, setProgressPct] = useState(0);
   const [durationMs, setDurationMs] = useState(5000);
   const [durationReady, setDurationReady] = useState(false);
@@ -37,22 +38,30 @@ export default function StoryViewerModal({
   useEffect(() => {
     // Defer to avoid ESLint cascading-render warning.
     queueMicrotask(() => {
-      setCurrentIndex(() => {
-        const max = (stories?.length ?? 1) - 1;
-        if (Number.isNaN(startIndex) || startIndex == null) return 0;
-        return Math.max(0, Math.min(max, startIndex));
-      });
+      const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+      const idx = startOwnerId ? groups.findIndex((g) => g.ownerId === startOwnerId) : -1;
+      setCurrentOwnerIndex(Math.max(0, idx >= 0 ? idx : 0));
+      setCurrentStoryIndex(0);
     });
-  }, [startIndex, stories?.length]);
+  }, [startOwnerId, ownerGroups?.length]);
+
+  const currentOwner = useMemo(() => {
+    const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+    if (!groups.length) return null;
+    const idx = Math.max(0, Math.min(groups.length - 1, currentOwnerIndex));
+    return groups[idx] ?? null;
+  }, [ownerGroups, currentOwnerIndex]);
 
   const currentStory = useMemo(() => {
-    if (!stories?.length) return null;
-    const idx = Math.max(0, Math.min(stories.length - 1, currentIndex));
-    return stories[idx] ?? null;
-  }, [stories, currentIndex]);
+    if (!currentOwner?.stories?.length) return null;
+    const idx = Math.max(0, Math.min(currentOwner.stories.length - 1, currentStoryIndex));
+    return currentOwner.stories[idx] ?? null;
+  }, [currentOwner, currentStoryIndex]);
 
   const currentStoryId = currentStory?.id;
   const uploadComplete = currentStory?.uploadComplete ?? true;
+  const ownerStories = currentOwner?.stories ?? [];
+  const ownerStoryCount = ownerStories.length;
 
   useEffect(() => {
     if (!currentStory?.id) return;
@@ -124,12 +133,19 @@ export default function StoryViewerModal({
       setProgressPct(pct);
 
       if (elapsed >= durationMs) {
-        if (!stories?.length) return;
-        if (currentIndex >= stories.length - 1) {
-          handleClose();
+        if (!ownerStoryCount) return;
+        if (currentStoryIndex >= ownerStoryCount - 1) {
+          // Move to next owner group
+          const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+          if (currentOwnerIndex >= groups.length - 1) {
+            handleClose();
+            return;
+          }
+          setCurrentOwnerIndex((i) => i + 1);
+          setCurrentStoryIndex(0);
           return;
         }
-        setCurrentIndex((i) => i + 1);
+        setCurrentStoryIndex((i) => i + 1);
         return;
       }
 
@@ -138,24 +154,47 @@ export default function StoryViewerModal({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [currentStoryId, durationReady, durationMs]);
+  }, [
+    currentStoryId,
+    durationReady,
+    durationMs,
+    currentOwnerIndex,
+    currentStoryIndex,
+    ownerStoryCount,
+    ownerGroups,
+  ]);
 
   function goNext() {
-    if (!stories?.length) return;
-    if (currentIndex >= stories.length - 1) {
+    if (!ownerStoryCount) return;
+    if (currentStoryIndex < ownerStoryCount - 1) {
+      setCurrentStoryIndex((i) => i + 1);
+      return;
+    }
+    const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+    if (currentOwnerIndex >= groups.length - 1) {
       handleClose();
       return;
     }
-    setCurrentIndex((i) => i + 1);
+    setCurrentOwnerIndex((i) => i + 1);
+    setCurrentStoryIndex(0);
   }
 
   function goPrev() {
-    if (!stories?.length) return;
-    if (currentIndex <= 0) {
+    if (!ownerStoryCount) return;
+    if (currentStoryIndex > 0) {
+      setCurrentStoryIndex((i) => i - 1);
+      return;
+    }
+    if (currentOwnerIndex <= 0) {
       handleClose();
       return;
     }
-    setCurrentIndex((i) => i - 1);
+    setCurrentOwnerIndex((i) => i - 1);
+    // Jump to last story of previous owner
+    const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+    const prev = groups[Math.max(0, currentOwnerIndex - 1)];
+    const lastIdx = Math.max(0, (prev?.stories?.length ?? 1) - 1);
+    setCurrentStoryIndex(lastIdx);
   }
 
   const onVideoLoadedMetadata = () => {
@@ -173,6 +212,10 @@ export default function StoryViewerModal({
 
   if (!currentStory) return null;
 
+  const groups = Array.isArray(ownerGroups) ? ownerGroups : [];
+  const nextGroups = groups.slice(currentOwnerIndex + 1, currentOwnerIndex + 3);
+  const prevGroup = currentOwnerIndex > 0 ? groups[currentOwnerIndex - 1] : null;
+
   return (
     <div
       className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-2 sm:items-center"
@@ -180,131 +223,168 @@ export default function StoryViewerModal({
       aria-modal="true"
       onClick={handleClose}
     >
-      <div
-        className="relative w-full max-w-lg h-[90vh] overflow-hidden rounded-3xl bg-black shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Progress bars */}
-        <div className="absolute left-3 right-3 top-3 z-10 flex gap-1.5">
-          {(stories ?? []).map((s, idx) => {
-            let w = "0%";
-            if (idx < currentIndex) w = "100%";
-            if (idx === currentIndex) w = `${progressPct}%`;
-            return (
-              <div key={s.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
-                <div className="h-full w-0 bg-white" style={{ width: w }} />
+      <div className="flex w-full max-w-6xl items-center justify-center gap-6" onClick={(e) => e.stopPropagation()}>
+        {/* Left preview (previous user) */}
+        <div className="hidden lg:block w-[220px]">
+          {prevGroup ? (
+            <button
+              type="button"
+              className="relative w-full overflow-hidden rounded-3xl bg-black/80 shadow-xl"
+              style={{ height: "70vh" }}
+              onClick={() => {
+                setCurrentOwnerIndex((i) => Math.max(0, i - 1));
+                const lastIdx = Math.max(0, (prevGroup?.stories?.length ?? 1) - 1);
+                setCurrentStoryIndex(lastIdx);
+              }}
+              aria-label={`Previous user stories: ${prevGroup.authorHeadline}`}
+            >
+              <div className="absolute inset-0 opacity-70">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={prevGroup.stories?.[prevGroup.stories.length - 1]?.mediaUrl}
+                  alt=""
+                  className="h-full w-full object-cover blur-[1px]"
+                />
               </div>
-            );
-          })}
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute left-3 top-3 flex items-center gap-2 text-white">
+                <span className="h-7 w-7 overflow-hidden rounded-full border border-white/30 bg-black/20">
+                  {prevGroup.authorAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={prevGroup.authorAvatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : null}
+                </span>
+                <span className="truncate text-xs font-semibold">{prevGroup.authorHeadline}</span>
+              </div>
+            </button>
+          ) : null}
         </div>
 
-        {/* Top bar */}
-        <div className="absolute left-3 right-3 top-8 z-10 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-black/30">
-              {currentStory.authorAvatarUrl ? (
-                <img
-                  src={currentStory.authorAvatarUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-[11px] font-bold text-white">
-                  {String(currentStory.authorHeadline ?? "?").slice(0, 1)}
-                </span>
-              )}
-            </span>
-            <span className="min-w-0 truncate text-sm font-semibold text-white">
-              {currentStory.authorHeadline}
-            </span>
-          </div>
-
+        {/* Main viewer */}
+        <div className="relative w-full max-w-lg h-[90vh]">
           <button
             type="button"
-            className="rounded-full bg-black/30 px-3 py-1 text-sm font-semibold text-white hover:bg-black/40"
+            className="absolute -right-11 top-3 z-[30] rounded-full bg-black/60 px-3 py-1.5 text-sm font-bold text-white hover:bg-black/75"
             onClick={handleClose}
-            aria-label="Close story"
+            aria-label="Close story viewer"
           >
             ×
           </button>
-        </div>
+          <div className="relative h-full w-full overflow-hidden rounded-3xl bg-black shadow-2xl">
+          {/* Progress bars (ONLY for current owner) */}
+          <div className="absolute left-3 right-3 top-3 z-10 flex gap-1.5">
+            {ownerStories.map((s, idx) => {
+              let w = "0%";
+              if (idx < currentStoryIndex) w = "100%";
+              if (idx === currentStoryIndex) w = `${progressPct}%`;
+              return (
+                <div key={s.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
+                  <div className="h-full w-0 bg-white" style={{ width: w }} />
+                </div>
+              );
+            })}
+          </div>
 
-        {/* Tap zones */}
-        <button
-          type="button"
-          className="absolute left-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
-          aria-label="Previous story"
-          onClick={(e) => {
-            e.stopPropagation();
-            goPrev();
-          }}
-        >
-          ‹
-        </button>
-        <button
-          type="button"
-          className="absolute right-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
-          aria-label="Next story"
-          onClick={(e) => {
-            e.stopPropagation();
-            goNext();
-          }}
-        >
-          ›
-        </button>
-        <button
-          type="button"
-          className="absolute left-0 top-0 bottom-0 w-1/2 bg-transparent z-10"
-          aria-label="Previous story"
-          onClick={(e) => {
-            e.stopPropagation();
-            goPrev();
-          }}
-        />
-        <button
-          type="button"
-          className="absolute right-0 top-0 bottom-0 w-1/2 bg-transparent z-10"
-          aria-label="Next story"
-          onClick={(e) => {
-            e.stopPropagation();
-            goNext();
-          }}
-        />
-
-        <div className="relative flex h-full items-center justify-center bg-black">
-          {uploadComplete === false ? (
-            <div className="pointer-events-none absolute inset-0 z-[12] flex items-center justify-center">
-              <div className="w-2/3 rounded-full bg-white/10 p-1">
-                <div className="h-1.5 w-1/3 animate-pulse rounded-full bg-white/70" />
-              </div>
+          {/* Top bar */}
+          <div className="absolute left-3 right-3 top-8 z-10 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-black/30">
+                {currentStory.authorAvatarUrl ? (
+                  <img
+                    src={currentStory.authorAvatarUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[11px] font-bold text-white">
+                    {String(currentStory.authorHeadline ?? "?").slice(0, 1)}
+                  </span>
+                )}
+              </span>
+              <span className="min-w-0 truncate text-sm font-semibold text-white">
+                {currentStory.authorHeadline}
+              </span>
             </div>
-          ) : null}
-          {currentStory.mediaKind === "video" ? (
-            <video
-              ref={videoRef}
-              src={currentStory.mediaUrl}
-              className={`h-full w-full object-contain transition-all duration-200 ${
-                uploadComplete === false ? "blur-sm scale-105" : ""
-              }`}
-              autoPlay={uploadComplete}
-              playsInline
-              muted
-              onLoadedMetadata={onVideoLoadedMetadata}
-            />
-          ) : (
-            <img
-              src={currentStory.mediaUrl}
-              alt=""
-              className={`h-full w-full object-contain transition-all duration-200 ${
-                uploadComplete === false ? "blur-sm scale-105" : ""
-              }`}
-              onLoad={() => {
-                setDurationMs(IMAGE_DURATION_MS);
-                setMediaLoaded(true);
-              }}
-            />
-          )}
-        </div>
+
+            <div />
+          </div>
+
+          {/* Tap zones */}
+          <button
+            type="button"
+            className="absolute left-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+            aria-label="Previous story"
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 z-[20] -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+            aria-label="Next story"
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+          >
+            ›
+          </button>
+          <button
+            type="button"
+            className="absolute left-0 top-0 bottom-0 w-1/2 bg-transparent z-10"
+            aria-label="Previous story"
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+          />
+          <button
+            type="button"
+            className="absolute right-0 top-0 bottom-0 w-1/2 bg-transparent z-10"
+            aria-label="Next story"
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+          />
+
+          <div className="relative flex h-full items-center justify-center bg-black">
+            {uploadComplete === false ? (
+              <div className="pointer-events-none absolute inset-0 z-[12] flex items-center justify-center">
+                <div className="w-2/3 rounded-full bg-white/10 p-1">
+                  <div className="h-1.5 w-1/3 animate-pulse rounded-full bg-white/70" />
+                </div>
+              </div>
+            ) : null}
+            {currentStory.mediaKind === "video" ? (
+              <video
+                ref={videoRef}
+                src={currentStory.mediaUrl}
+                className={`h-full w-full object-contain transition-all duration-200 ${
+                  uploadComplete === false ? "blur-sm scale-105" : ""
+                }`}
+                autoPlay={uploadComplete}
+                playsInline
+                muted
+                onLoadedMetadata={onVideoLoadedMetadata}
+              />
+            ) : (
+              <img
+                src={currentStory.mediaUrl}
+                alt=""
+                className={`h-full w-full object-contain transition-all duration-200 ${
+                  uploadComplete === false ? "blur-sm scale-105" : ""
+                }`}
+                onLoad={() => {
+                  setDurationMs(IMAGE_DURATION_MS);
+                  setMediaLoaded(true);
+                }}
+              />
+            )}
+          </div>
 
         {/* Bottom reply bar (UI-only to match Instagram-like viewer) */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[15] bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-2">
@@ -340,6 +420,46 @@ export default function StoryViewerModal({
               </div>
             </div>
           </div>
+        </div>
+          </div>
+        </div>
+
+        {/* Right previews (next users) */}
+        <div className="hidden lg:flex w-[260px] flex-col gap-4">
+          {nextGroups.map((g) => {
+            const thumb = g.stories?.[g.stories.length - 1]?.mediaUrl;
+            return (
+              <button
+                key={g.ownerId}
+                type="button"
+                className="relative overflow-hidden rounded-3xl bg-black/80 shadow-xl"
+                style={{ height: "33vh" }}
+                onClick={() => {
+                  const idx = groups.findIndex((x) => x.ownerId === g.ownerId);
+                  if (idx >= 0) {
+                    setCurrentOwnerIndex(idx);
+                    setCurrentStoryIndex(0);
+                  }
+                }}
+                aria-label={`Open stories from ${g.authorHeadline}`}
+              >
+                <div className="absolute inset-0 opacity-80">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={thumb} alt="" className="h-full w-full object-cover blur-[1px]" />
+                </div>
+                <div className="absolute inset-0 bg-black/45" />
+                <div className="absolute left-3 top-3 flex items-center gap-2 text-white">
+                  <span className="h-7 w-7 overflow-hidden rounded-full border border-white/30 bg-black/20">
+                    {g.authorAvatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.authorAvatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : null}
+                  </span>
+                  <span className="truncate text-xs font-semibold">{g.authorHeadline}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

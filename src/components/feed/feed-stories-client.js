@@ -340,8 +340,8 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
 
       {selectedOwnerId && selectedStartIndex >= 0 ? (
         <StoryViewerModal
-          stories={playbackStories}
-          startIndex={selectedStartIndex}
+          ownerGroups={ownerGroups}
+          startOwnerId={selectedOwnerId}
           viewerUserId={viewerUserId}
           onClose={() => setSelectedOwnerId(null)}
           onMarkSeen={(idsOrId) => {
