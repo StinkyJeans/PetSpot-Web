@@ -1,9 +1,19 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { requireUser } from "@/lib/auth/server";
+import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { buildCurrentPath, buildUserMediaPath } from "@/lib/storage/helpers";
+
+function revalidateFeedAndProfile() {
+  revalidateTag("feed");
+  revalidateTag("profile");
+}
+
+function revalidateFeedOnly() {
+  revalidateTag("feed");
+}
 
 /**
  * Native <form action={fn}> passes FormData as the first argument only.
@@ -30,6 +40,8 @@ export async function createPost(prevOrForm, maybeForm) {
   const user = await requireUser();
   const caption = String(formData.get("caption") ?? "").trim();
   const mediaFile = formData.get("mediaFile");
+  const mediaUrlFromClient = String(formData.get("mediaUrl") ?? "").trim();
+  const mediaKindFromClient = String(formData.get("mediaKind") ?? "").trim();
 
   if (!caption) {
     return { error: "Caption is required." };
@@ -50,7 +62,13 @@ export async function createPost(prevOrForm, maybeForm) {
 
   let mediaUrl = null;
   let mediaKind = null;
-  if (mediaFile && typeof mediaFile.arrayBuffer === "function" && mediaFile.size > 0) {
+  if (
+    mediaUrlFromClient &&
+    (mediaKindFromClient === "image" || mediaKindFromClient === "video")
+  ) {
+    mediaUrl = mediaUrlFromClient;
+    mediaKind = mediaKindFromClient;
+  } else if (mediaFile && typeof mediaFile.arrayBuffer === "function" && mediaFile.size > 0) {
     mediaKind = getMediaKind(mediaFile);
     if (!mediaKind) {
       return { error: "Only image or video files are allowed." };
@@ -89,7 +107,7 @@ export async function createPost(prevOrForm, maybeForm) {
     return { error: error.message || "Could not create post." };
   }
 
-  revalidatePath("/feed");
+  revalidateFeedAndProfile();
   return { error: "" };
 }
 
@@ -209,8 +227,7 @@ export async function updateProfilePicture(prevOrForm, maybeForm) {
     profileColumn: "profile_image_url",
   });
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateFeedAndProfile();
   return result;
 }
 
@@ -245,8 +262,7 @@ export async function updateBackgroundPicture(prevOrForm, maybeForm) {
     profileColumn: "background_image_url",
   });
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateFeedAndProfile();
   return result;
 }
 
@@ -269,8 +285,6 @@ export async function togglePostLike(formData) {
   } else {
     await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
   }
-
-  revalidatePath("/feed");
 }
 
 export async function deletePost(formData) {
@@ -287,8 +301,7 @@ export async function deletePost(formData) {
     return { error: error.message || "Could not delete post." };
   }
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateFeedAndProfile();
   return { ok: true };
 }
 
@@ -305,7 +318,7 @@ export async function recordPostShare(formData) {
     return { error: error.message || "Could not record share." };
   }
 
-  revalidatePath("/feed");
+  revalidateFeedOnly();
   return { error: "" };
 }
 
@@ -368,8 +381,7 @@ export async function sharePost(prevOrForm, maybeForm) {
     return { error: metricError.message || "Could not record share." };
   }
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateFeedAndProfile();
   return { error: "" };
 }
 
@@ -381,6 +393,7 @@ export async function addPostComment(prevOrForm, maybeForm) {
   const user = await requireUser();
   const postId = String(formData.get("postId") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const parentCommentId = String(formData.get("parentCommentId") ?? "").trim() || null;
   if (!postId) {
     return { error: "Missing post." };
   }
@@ -389,18 +402,92 @@ export async function addPostComment(prevOrForm, maybeForm) {
   }
 
   const supabase = await getSupabaseServerClient();
-  const { error } = await supabase.from("post_comments").insert({
-    post_id: postId,
-    user_id: user.id,
-    body,
-  });
 
-  if (error) {
-    return { error: error.message || "Could not add comment." };
+  if (parentCommentId) {
+    const { data: parentRow, error: parentErr } = await supabase
+      .from("post_comments")
+      .select("id, post_id")
+      .eq("id", parentCommentId)
+      .maybeSingle();
+    if (parentErr || !parentRow || parentRow.post_id !== postId) {
+      return { error: "Invalid reply target." };
+    }
   }
 
-  revalidatePath("/feed");
-  return { error: "" };
+  const { data: row, error } = await supabase
+    .from("post_comments")
+    .insert({
+      post_id: postId,
+      user_id: user.id,
+      body,
+      parent_id: parentCommentId,
+    })
+    .select("id, body, created_at, user_id, parent_id")
+    .single();
+
+  if (error || !row) {
+    return { error: error?.message || "Could not add comment." };
+  }
+
+  const { data: pet } = await supabase
+    .from("pet_profiles")
+    .select("owner_id, pet_name, owner_display_name, profile_image_url")
+    .eq("is_primary", true)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  const headline = formatProfileHeadline(pet?.owner_display_name, pet?.pet_name);
+
+  return {
+    error: "",
+    comment: {
+      id: row.id,
+      body: row.body,
+      createdAt: row.created_at,
+      userId: row.user_id,
+      parentId: row.parent_id,
+      authorHeadline: headline || "Pet parent",
+      authorAvatarUrl: pet?.profile_image_url ?? "",
+      likeCount: 0,
+      liked: false,
+    },
+  };
+}
+
+export async function togglePostCommentLike(commentId) {
+  const user = await requireUser();
+  const id = String(commentId ?? "").trim();
+  if (!id) {
+    return { error: "Missing comment." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+
+  const { data: existing } = await supabase
+    .from("post_comment_likes")
+    .select("comment_id")
+    .eq("comment_id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from("post_comment_likes").delete().eq("comment_id", id).eq("user_id", user.id);
+  } else {
+    await supabase.from("post_comment_likes").insert({ comment_id: id, user_id: user.id });
+  }
+
+  const liked = !existing;
+
+  const { count, error: countErr } = await supabase
+    .from("post_comment_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("comment_id", id);
+
+  if (countErr) {
+    return { error: countErr.message || "Could not load like count." };
+  }
+
+  return { error: "", commentId: id, liked, likeCount: count ?? 0 };
 }
 
 export async function getPostComments(postId) {
@@ -410,33 +497,91 @@ export async function getPostComments(postId) {
   const supabase = await getSupabaseServerClient();
   const { data: rows, error } = await supabase
     .from("post_comments")
-    .select("id, body, created_at, user_id")
+    .select("id, body, created_at, user_id, parent_id")
     .eq("post_id", postId)
     .order("created_at", { ascending: true })
-    .limit(50);
+    .limit(150);
 
   if (error) {
     return { comments: [], error: error.message };
   }
 
-  const userIds = [...new Set((rows ?? []).map((r) => r.user_id))];
-  let nameByUser = {};
+  const list = rows ?? [];
+  const userIds = [...new Set(list.map((r) => r.user_id))];
+  let profileByUser = {};
   if (userIds.length) {
     const { data: pets } = await supabase
       .from("pet_profiles")
-      .select("owner_id, pet_name")
+      .select("owner_id, pet_name, owner_display_name, profile_image_url")
       .eq("is_primary", true)
       .in("owner_id", userIds);
 
-    nameByUser = Object.fromEntries((pets ?? []).map((p) => [p.owner_id, p.pet_name]));
+    profileByUser = Object.fromEntries(
+      (pets ?? []).map((p) => [
+        p.owner_id,
+        {
+          headline: formatProfileHeadline(p.owner_display_name, p.pet_name),
+          avatarUrl: p.profile_image_url ?? "",
+        },
+      ]),
+    );
   }
 
-  const comments = (rows ?? []).map((r) => ({
-    id: r.id,
-    body: r.body,
-    createdAt: r.created_at,
-    authorName: nameByUser[r.user_id] || "Pet parent",
-  }));
+  const commentIds = list.map((r) => r.id);
+  const likeCountByComment = Object.fromEntries(commentIds.map((cid) => [cid, 0]));
+  const likedIds = new Set();
+
+  if (commentIds.length) {
+    const { data: aggRows, error: aggErr } = await supabase.rpc("post_comment_like_counts", {
+      p_comment_ids: commentIds,
+    });
+
+    if (!aggErr) {
+      for (const ar of aggRows ?? []) {
+        likeCountByComment[ar.comment_id] = Number(ar.like_count) || 0;
+      }
+    } else {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[feed] post_comment_like_counts RPC failed, using legacy:", aggErr.message);
+      }
+      const { data: likeRows } = await supabase
+        .from("post_comment_likes")
+        .select("comment_id, user_id")
+        .in("comment_id", commentIds);
+
+      for (const lr of likeRows ?? []) {
+        likeCountByComment[lr.comment_id] = (likeCountByComment[lr.comment_id] ?? 0) + 1;
+        if (lr.user_id === user.id) likedIds.add(lr.comment_id);
+      }
+    }
+
+    if (!aggErr) {
+      const { data: myCommentLikes } = await supabase
+        .from("post_comment_likes")
+        .select("comment_id")
+        .in("comment_id", commentIds)
+        .eq("user_id", user.id);
+
+      for (const ml of myCommentLikes ?? []) {
+        likedIds.add(ml.comment_id);
+      }
+    }
+  }
+
+  const comments = list.map((r) => {
+    const prof = profileByUser[r.user_id];
+    return {
+      id: r.id,
+      body: r.body,
+      createdAt: r.created_at,
+      userId: r.user_id,
+      parentId: r.parent_id,
+      authorHeadline: prof?.headline || "Pet parent",
+      authorAvatarUrl: prof?.avatarUrl ?? "",
+      likeCount: likeCountByComment[r.id] ?? 0,
+      liked: likedIds.has(r.id),
+    };
+  });
 
   return { comments, error: "" };
 }

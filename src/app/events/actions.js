@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { requireUser } from "@/lib/auth/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -42,8 +42,8 @@ export async function createEvent(input) {
     return { error: error.message || "Could not create event." };
   }
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateTag("feed");
+  revalidateTag("profile");
 
   return {
     error: "",
@@ -87,8 +87,8 @@ export async function updateEvent(input) {
     return { error: error.message || "Could not update event." };
   }
 
-  revalidatePath("/feed");
-  revalidatePath("/profile");
+  revalidateTag("feed");
+  revalidateTag("profile");
 
   return {
     error: "",

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 export default function ViewAllEvent({
@@ -10,13 +9,8 @@ export default function ViewAllEvent({
   events = [],
   onEdit,
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
 
   const modal = (
     <div

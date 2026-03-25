@@ -6,6 +6,7 @@ import ViewStatsDetailsModal from "@/components/modal/profile/viewStatsDetailsMo
 import ProfileAboutCard from "@/components/profile/profile-about-card";
 import ProfileGallery from "@/components/profile/profile-gallery";
 import ProfileHero from "@/components/profile/profile-hero";
+import { formatProfileHeadline } from "@/lib/profile";
 
 export function ProfileRightPanel({
   aboutMe,
@@ -40,6 +41,7 @@ export default function ProfilePageClient({
   viewerPetAvatarUrl,
 }) {
   const [showStatsDetails, setShowStatsDetails] = useState(false);
+  const viewerCommentLabel = formatProfileHeadline(ownerDisplayName, petName);
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,6 +60,7 @@ export default function ProfilePageClient({
         postFeedItems={postFeedItems}
         viewerUserId={viewerUserId}
         viewerPetAvatarUrl={viewerPetAvatarUrl}
+        viewerCommentLabel={viewerCommentLabel}
       />
 
       <ViewStatsDetailsModal

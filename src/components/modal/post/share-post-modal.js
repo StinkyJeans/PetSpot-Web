@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
+/** Portal shell (no hooks) so caption state unmounts when the modal closes. */
 export default function SharePostModal({
   isOpen,
   onClose,
@@ -10,25 +11,26 @@ export default function SharePostModal({
   post,
   submitting = false,
 }) {
-  const [mounted, setMounted] = useState(false);
+  if (typeof document === "undefined") return null;
+  if (!isOpen || !post) return null;
+
+  return createPortal(
+    <SharePostModalContent
+      post={post}
+      onClose={onClose}
+      onSubmit={onSubmit}
+      submitting={submitting}
+    />,
+    document.body,
+  );
+}
+
+function SharePostModalContent({ post, onClose, onSubmit, submitting }) {
   const [caption, setCaption] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setCaption("");
-    }
-  }, [isOpen]);
 
   const previewMedia = useMemo(() => post?.media_url || post?.image_url || "", [post]);
   const previewKind = useMemo(() => post?.media_kind || "", [post]);
   const previewCaption = useMemo(() => String(post?.caption ?? "").trim(), [post]);
-
-  if (!isOpen || !mounted || !post) return null;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -87,5 +89,5 @@ export default function SharePostModal({
     </div>
   );
 
-  return createPortal(modal, document.body);
+  return modal;
 }

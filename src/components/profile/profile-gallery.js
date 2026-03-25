@@ -10,6 +10,7 @@ export default function ProfileGallery({
   postFeedItems = [],
   viewerUserId,
   viewerPetAvatarUrl,
+  viewerCommentLabel = "",
 }) {
   const [tab, setTab] = useState("posts");
 
@@ -89,6 +90,7 @@ export default function ProfileGallery({
                 shared={item.shared}
                 viewerPetAvatarUrl={viewerPetAvatarUrl}
                 viewerUserId={viewerUserId}
+                viewerCommentLabel={viewerCommentLabel}
               />
             ))}
           </div>

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { requireUser } from "@/lib/auth/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -40,7 +40,7 @@ export async function updatePetAbout(prevOrForm, maybeForm) {
     .eq("owner_id", user.id);
 
   if (error) return { error: error.message || "Could not update bio." };
-  revalidatePath("/profile");
+  revalidateTag("profile");
   return { error: "" };
 }
 
@@ -79,6 +79,6 @@ export async function updatePetDetails(prevOrForm, maybeForm) {
     .eq("owner_id", user.id);
 
   if (error) return { error: error.message || "Could not update details." };
-  revalidatePath("/profile");
+  revalidateTag("profile");
   return { error: "" };
 }

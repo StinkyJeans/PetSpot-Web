@@ -44,10 +44,21 @@ export function ToastProvider({ children }) {
   );
 }
 
+const noopShowToast = () => {};
+
+/**
+ * Returns global toast API. If ToastProvider is missing (e.g. mis-nested tree or tooling),
+ * returns a no-op so client components like PostCard do not crash.
+ */
 export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) {
-    throw new Error("useToast must be used within ToastProvider");
+    if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+      console.warn(
+        "[PetSpot] useToast called outside ToastProvider — toasts disabled for this subtree.",
+      );
+    }
+    return { showToast: noopShowToast };
   }
   return ctx;
 }

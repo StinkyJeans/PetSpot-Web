@@ -2,65 +2,25 @@ import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
-import { getEventSectionsForUserId } from "@/lib/events/server";
-import { aggregatePostEngagement } from "@/lib/feed/aggregate-engagement";
-import { enrichPostsWithShared } from "@/lib/feed/enrich-shared-posts";
 import { formatProfileHeadline } from "@/lib/profile";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
-
-const profilePostsSelect =
-  "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location),shared_post:posts!posts_shared_post_id_fkey(id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location))";
-const profilePostsBaseSelect =
-  "id,owner_id,shared_post_id,caption,image_url,media_url,media_kind,created_at,pet_profiles(pet_name,breed,profile_image_url,owner_display_name,location)";
+import { loadProfileData } from "@/lib/profile/load-profile-cached-data";
 
 export default async function ProfilePage() {
   const user = await requireUser();
   await requirePrimaryPetProfile(user.id);
-  const supabase = await getSupabaseServerClient();
 
-  const { data: profile } = await supabase
-    .from("pet_profiles")
-    .select(
-      "id,pet_name,breed,owner_display_name,profile_image_url,background_image_url,about_me,location,favorite_place,favorite_toy,pet_birthday",
-    )
-    .eq("owner_id", user.id)
-    .eq("is_primary", true)
-    .limit(1)
-    .maybeSingle();
+  const {
+    profile,
+    followerCount,
+    followingCount,
+    postRows,
+    counts,
+    liked,
+    shared,
+    myEvents,
+    otherEvents,
+  } = await loadProfileData(user.id);
 
-  const { count: followerCount } = await supabase
-    .from("user_follows")
-    .select("*", { count: "exact", head: true })
-    .eq("followee_id", user.id);
-
-  const { count: followingCount } = await supabase
-    .from("user_follows")
-    .select("*", { count: "exact", head: true })
-    .eq("follower_id", user.id);
-
-  let posts = null;
-  const withShared = await supabase
-    .from("posts")
-    .select(profilePostsSelect)
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(100);
-
-  if (withShared.error) {
-    const fallback = await supabase
-      .from("posts")
-      .select(profilePostsBaseSelect)
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    posts = await enrichPostsWithShared(supabase, fallback.data ?? []);
-  } else {
-    posts = await enrichPostsWithShared(supabase, withShared.data ?? []);
-  }
-
-  const postRows = posts ?? [];
-  const postIds = postRows.map((p) => p.id);
-  const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, user.id);
   const viewerAvatar = profile?.profile_image_url ?? "";
 
   const galleryImageItems = [];
@@ -87,7 +47,6 @@ export default async function ProfilePage() {
       shared: shared.has(post.id),
     };
   });
-  const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, user.id);
   const sidebarProfileName = formatProfileHeadline(profile?.owner_display_name, profile?.pet_name);
 
   return (
