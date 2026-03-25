@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { loginWithPassword, signInWithGoogle } from "@/app/auth/actions";
 import { ArrowRight, Email, Google, Password } from "griddy-icons";
+import { useToast } from "@/components/feedback/toast-provider";
 
 const initialState = { error: "" };
 
@@ -13,6 +14,20 @@ export default function LoginForm({ initialError, initialSuccess }) {
     initialState,
   );
   const error = state?.error || initialError;
+  const { showToast } = useToast();
+  const lastToastErrorRef = useRef("");
+
+  useEffect(() => {
+    if (!initialSuccess) return;
+    showToast(initialSuccess, "success");
+  }, [initialSuccess, showToast]);
+
+  useEffect(() => {
+    if (!error) return;
+    if (lastToastErrorRef.current === error) return;
+    lastToastErrorRef.current = error;
+    showToast(error, "error");
+  }, [error, showToast]);
 
   return (
     <div className="relative z-10 w-full max-w-md rounded-[28px] border border-white/70 bg-white/95 p-8 shadow-2xl">
@@ -23,12 +38,6 @@ export default function LoginForm({ initialError, initialSuccess }) {
       <p className="mt-2 text-center text-sm text-zinc-600">
         Log in to continue to PetSpot.
       </p>
-
-      {initialSuccess ? (
-        <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-sm font-semibold text-emerald-900">
-          {initialSuccess}
-        </p>
-      ) : null}
 
       <form action={signInWithGoogle} className="mt-6">
         <button
@@ -69,7 +78,6 @@ export default function LoginForm({ initialError, initialSuccess }) {
             required
           />
         </div>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <button
           type="submit"
           disabled={pending}
