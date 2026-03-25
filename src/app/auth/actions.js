@@ -25,7 +25,20 @@ export async function signupWithPassword(_, formData) {
   }
 
   const supabase = await getSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const headerStore = await headers();
+  const origin =
+    headerStore.get("origin") ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "http://localhost:3000";
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      // Ensures the email confirmation link returns to the correct deployed host.
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  });
 
   if (error) {
     return { error: normalizeError(error, "Could not create your account.") };
