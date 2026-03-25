@@ -27,13 +27,6 @@ export async function createStory(prevOrForm, maybeForm) {
   const user = await requireUser();
   const supabase = await getSupabaseServerClient();
 
-  // Delete any active story for this user so the strip stays "one story per user".
-  await supabase
-    .from("user_stories")
-    .delete()
-    .eq("owner_id", user.id)
-    .gt("expires_at", new Date().toISOString());
-
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
   const { data: inserted, error: insertErr } = await supabase

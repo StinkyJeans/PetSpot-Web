@@ -21,7 +21,8 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
     enabled: true,
   });
 
-  const [selectedStoryId, setSelectedStoryId] = useState(null);
+  // Instagram-style: one circle per user, but the viewer can play multiple stories per user.
+  const [selectedOwnerId, setSelectedOwnerId] = useState(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadPending, startUploadTransition] = useTransition();
@@ -30,15 +31,44 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
   const fileInputRef = useRef(null);
   const { showToast } = useToast();
 
-  const selectedStory = useMemo(
-    () => stories.find((s) => s.id === selectedStoryId) ?? null,
-    [selectedStoryId, stories],
-  );
+  const ownerGroups = useMemo(() => {
+    const byOwner = new Map();
+    for (const s of stories) {
+      const arr = byOwner.get(s.ownerId) ?? [];
+      arr.push(s);
+      byOwner.set(s.ownerId, arr);
+    }
 
-  const selectedIndex = useMemo(() => {
-    if (!selectedStoryId) return -1;
-    return stories.findIndex((s) => s.id === selectedStoryId);
-  }, [selectedStoryId, stories]);
+    const groups = [];
+    for (const [ownerId, arr] of byOwner.entries()) {
+      const ownerStories = [...arr].sort((a, b) =>
+        String(a.createdAt).localeCompare(String(b.createdAt)),
+      ); // oldest -> newest for playback
+      const latestCreatedAt = ownerStories[ownerStories.length - 1]?.createdAt ?? "";
+      const viewerHasUnseen = ownerStories.some((st) => !st.viewerHasViewed);
+
+      groups.push({
+        ownerId,
+        stories: ownerStories,
+        authorHeadline: ownerStories[0]?.authorHeadline ?? "Story",
+        authorAvatarUrl: ownerStories[0]?.authorAvatarUrl ?? "",
+        latestCreatedAt,
+        viewerHasUnseen,
+      });
+    }
+
+    groups.sort((a, b) => String(b.latestCreatedAt).localeCompare(String(a.latestCreatedAt)));
+    return groups;
+  }, [stories]);
+
+  const playbackStories = useMemo(() => {
+    return ownerGroups.flatMap((g) => g.stories);
+  }, [ownerGroups]);
+
+  const selectedStartIndex = useMemo(() => {
+    if (!selectedOwnerId) return -1;
+    return playbackStories.findIndex((s) => s.ownerId === selectedOwnerId);
+  }, [selectedOwnerId, playbackStories]);
 
   function resetUploadModal() {
     setUploadError("");
@@ -66,45 +96,36 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
           </span>
         </button>
 
-        {stories.map((story) => {
-          const ringClass = story.viewerHasViewed
-            ? "border-zinc-200 bg-zinc-50"
-            : "border-emerald-300 bg-emerald-50";
+        {ownerGroups.map((group) => {
+          const ringClass = group.viewerHasUnseen
+            ? "border-emerald-300 bg-emerald-50"
+            : "border-zinc-200 bg-zinc-50";
 
           return (
             <button
-              key={story.id}
+              key={group.ownerId}
               type="button"
               className="flex shrink-0 flex-col items-center gap-2 text-center"
-              aria-label={`Open story from ${story.authorHeadline}`}
-              onClick={() => {
-                setSelectedStoryId(story.id);
-                if (!story.viewerHasViewed) {
-                  setStories((prev) =>
-                    prev.map((s) =>
-                      s.id === story.id ? { ...s, viewerHasViewed: true } : s,
-                    ),
-                  );
-                }
-              }}
+              aria-label={`Open stories from ${group.authorHeadline}`}
+              onClick={() => setSelectedOwnerId(group.ownerId)}
             >
               <span
                 className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${ringClass}`}
               >
-                {story.authorAvatarUrl ? (
+                {group.authorAvatarUrl ? (
                   <img
-                    src={story.authorAvatarUrl}
+                    src={group.authorAvatarUrl}
                     alt=""
                     className="h-[56px] w-[56px] rounded-full object-cover"
                   />
                 ) : (
                   <span className="text-[12px] font-bold text-emerald-900">
-                    {storyInitial(story.authorHeadline)}
+                    {storyInitial(group.authorHeadline)}
                   </span>
                 )}
               </span>
               <span className="max-w-[72px] truncate text-xs font-semibold text-zinc-700">
-                {story.authorHeadline}
+                {group.authorHeadline}
               </span>
             </button>
           );
@@ -276,11 +297,11 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
         </div>
       ) : null}
 
-      {selectedStory && selectedIndex >= 0 ? (
+      {selectedOwnerId && selectedStartIndex >= 0 ? (
         <StoryViewerModal
-          stories={stories}
-          startIndex={selectedIndex}
-          onClose={() => setSelectedStoryId(null)}
+          stories={playbackStories}
+          startIndex={selectedStartIndex}
+          onClose={() => setSelectedOwnerId(null)}
           onMarkSeen={(id) => {
             setStories((prev) =>
               prev.map((s) =>

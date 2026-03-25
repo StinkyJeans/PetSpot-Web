@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { recordStoryView } from "@/app/stories/actions";
 import { useToast } from "@/components/feedback/toast-provider";
+import { ChatBubble, Heart, ShareIos } from "griddy-icons";
 
 export default function StoryViewerModal({
   stories,
@@ -230,6 +231,42 @@ export default function StoryViewerModal({
               className="max-h-[75vh] w-full object-contain"
             />
           )}
+        </div>
+
+        {/* Bottom reply bar (UI-only to match Instagram-like viewer) */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[15] bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-2">
+          <div className="flex items-center gap-2">
+            <span className="pointer-events-none flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/30">
+              {currentStory.authorAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentStory.authorAvatarUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-[11px] font-bold text-white/90">
+                  {String(currentStory.authorHeadline ?? "?").slice(0, 1)}
+                </span>
+              )}
+            </span>
+
+            <div className="min-w-0 flex-1 rounded-full bg-white/10 px-4 py-2 text-left text-xs font-semibold text-white/70">
+              Replying to {currentStory.authorHeadline}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="pointer-events-none flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                <Heart size={16} color="#f43f5e" filled />
+              </div>
+              <div className="pointer-events-none flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                <ChatBubble size={16} color="#e5e7eb" />
+              </div>
+              <div className="pointer-events-none flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                <ShareIos size={16} color="#e5e7eb" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

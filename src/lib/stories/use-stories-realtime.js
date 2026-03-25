@@ -59,6 +59,20 @@ export function useStoriesRealtime({
           if (!row) return;
           if (!isActiveStory(row.expiresAt)) return;
 
+          let viewerHasViewed = false;
+          if (viewerUserId) {
+            const { data: viewRow, error: viewErr } = await supabase
+              .from("story_views")
+              .select("story_id")
+              .eq("story_id", row.id)
+              .eq("viewer_user_id", viewerUserId)
+              .maybeSingle();
+
+            if (!viewErr && viewRow?.story_id) {
+              viewerHasViewed = true;
+            }
+          }
+
           setStories((prev) => {
             // Update existing story if present; otherwise insert.
             const exists = prev.some((s) => s.id === row.id);
@@ -67,7 +81,7 @@ export function useStoriesRealtime({
                 .map((s) => (s.id === row.id ? { ...s, ...row, viewerHasViewed: s.viewerHasViewed } : s))
                 .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
             }
-            return [{ ...row, viewerHasViewed: false }, ...prev].sort((a, b) =>
+            return [{ ...row, viewerHasViewed }, ...prev].sort((a, b) =>
               String(b.createdAt).localeCompare(String(a.createdAt)),
             );
           });
