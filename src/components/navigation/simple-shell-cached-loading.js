@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  AppLoadingShell,
+  SkeletonLine,
+  SkeletonLineGroup,
+  SkeletonNavBar,
+} from "@/components/ui/app-loading-shell";
 import { useRouteSnapshot } from "@/lib/navigation/use-route-snapshot";
 
 /**
@@ -10,25 +16,39 @@ export default function SimpleShellCachedLoading({ routeKey }) {
 
   if (snapshot?.title) {
     return (
-      <div className="min-h-screen bg-[#F1F8F1]">
-        <div className="h-14 w-full border-b border-emerald-100/80 bg-[#F1F8F1]/95 backdrop-blur" />
+      <AppLoadingShell>
+        <SkeletonNavBar className="h-14 w-full rounded-none" />
         <main className="mx-auto max-w-lg px-4 py-12 text-center">
           <h1 className="text-xl font-bold text-zinc-900">{snapshot.title}</h1>
           <p className="mt-2 text-sm text-zinc-600">{snapshot.subtitle ?? ""}</p>
-          <div className="mx-auto mt-8 h-10 max-w-[200px] rounded-full bg-white/80 shadow-sm" />
+          <div className="mx-auto mt-10 flex max-w-xs flex-col items-center gap-2">
+            <SkeletonLine className="h-11 w-full rounded-full" />
+            <SkeletonLine className="h-11 w-4/5 rounded-full" />
+          </div>
         </main>
-      </div>
+      </AppLoadingShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F8F1]">
-      <div className="h-14 w-full animate-pulse border-b border-emerald-100/80 bg-white/80" />
-      <main className="mx-auto max-w-lg px-4 py-12 text-center">
-        <div className="mx-auto h-10 w-48 animate-pulse rounded-lg bg-white/70" />
-        <div className="mx-auto mt-4 h-4 w-72 max-w-full animate-pulse rounded bg-white/60" />
-        <div className="mx-auto mt-8 h-10 max-w-[200px] animate-pulse rounded-full bg-white/70" />
+    <AppLoadingShell>
+      <SkeletonNavBar className="h-14 w-full rounded-none" />
+      <main className="mx-auto flex max-w-lg flex-col items-center px-4 py-12">
+        <div className="w-full space-y-3">
+          <SkeletonLine className="mx-auto h-8 w-56 rounded-lg" />
+          <SkeletonLine className="mx-auto h-4 w-72 max-w-full" />
+          <SkeletonLine className="mx-auto h-4 w-64 max-w-full" />
+        </div>
+        <SkeletonLineGroup
+          lines={3}
+          className="mt-8 w-full max-w-sm"
+          widths={["w-full", "w-[92%]", "w-[55%]"]}
+        />
+        <div className="mt-10 flex w-full max-w-xs flex-col gap-3">
+          <SkeletonLine className="h-11 w-full rounded-full" />
+          <SkeletonLine className="h-11 w-4/5 rounded-full" />
+        </div>
       </main>
-    </div>
+    </AppLoadingShell>
   );
 }

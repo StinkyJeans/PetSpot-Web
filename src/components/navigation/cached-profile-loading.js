@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  AppLoadingShell,
+  SkeletonBlock,
+  SkeletonNavBar,
+  SkeletonProfileHero,
+  SkeletonSidebarColumn,
+  SkeletonThumbGrid,
+} from "@/components/ui/app-loading-shell";
 import { useRouteSnapshot } from "@/lib/navigation/use-route-snapshot";
 
 export default function CachedProfileLoading() {
@@ -7,15 +15,15 @@ export default function CachedProfileLoading() {
 
   if (snapshot?.headline) {
     return (
-      <div className="min-h-screen bg-[#F1F8F1]">
-        <div className="h-14 w-full border-b border-emerald-100/80 bg-[#F1F8F1]/95 backdrop-blur" />
+      <AppLoadingShell>
+        <SkeletonNavBar className="h-14 w-full rounded-none" />
         <div className="mx-auto max-w-7xl px-4 py-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr_1fr]">
-            <div className="hidden lg:block h-[580px] rounded-3xl bg-white/70 shadow-sm" />
+            <SkeletonSidebarColumn className="hidden min-h-[580px] lg:block" />
             <div className="flex flex-col gap-5">
-              <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-3xl border border-emerald-100/90 bg-emerald-50/90 shadow-sm ring-1 ring-emerald-900/[0.04]">
                 <div
-                  className="h-36 w-full bg-emerald-100/80 bg-cover bg-center"
+                  className="h-36 w-full bg-emerald-200/40 bg-cover bg-center"
                   style={
                     snapshot.coverUrl
                       ? { backgroundImage: `url(${snapshot.coverUrl})` }
@@ -23,7 +31,7 @@ export default function CachedProfileLoading() {
                   }
                 />
                 <div className="-mt-12 flex flex-col items-center px-4 pb-6 pt-2">
-                  <span className="flex h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-white bg-emerald-50 shadow-sm">
+                  <span className="flex h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-emerald-100/80 bg-emerald-100/50 shadow-sm">
                     {snapshot.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={snapshot.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -47,7 +55,7 @@ export default function CachedProfileLoading() {
                   {snapshot.galleryThumbs.map((thumb) => (
                     <div
                       key={thumb.id}
-                      className="aspect-square overflow-hidden rounded-2xl bg-emerald-50"
+                      className="aspect-square overflow-hidden rounded-2xl bg-emerald-100/40 ring-1 ring-emerald-900/[0.05]"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={thumb.url} alt="" className="h-full w-full object-cover" />
@@ -55,29 +63,37 @@ export default function CachedProfileLoading() {
                   ))}
                 </div>
               ) : (
-                <div className="h-[620px] rounded-3xl bg-white/70 shadow-sm" />
+                <div className="space-y-3 rounded-3xl border border-emerald-100/60 bg-emerald-50/35 p-4 ring-1 ring-emerald-900/[0.04]">
+                  <SkeletonBlock className="h-4 w-40 rounded-md" />
+                  <SkeletonBlock className="h-3 w-56 rounded-md" />
+                  <SkeletonThumbGrid count={6} />
+                </div>
               )}
             </div>
-            <div className="hidden lg:block h-[580px] rounded-3xl bg-white/70 shadow-sm" />
+            <SkeletonSidebarColumn className="hidden min-h-[580px] lg:block" />
           </div>
         </div>
-      </div>
+      </AppLoadingShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F8F1]">
+    <AppLoadingShell>
+      <SkeletonNavBar className="h-14 w-full rounded-none" />
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="h-14 w-full animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr_1fr]">
-          <div className="hidden lg:block h-[580px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr_1fr]">
+          <SkeletonSidebarColumn className="hidden lg:block" />
           <div className="flex flex-col gap-5">
-            <div className="h-[260px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-            <div className="h-[620px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
+            <SkeletonProfileHero />
+            <div className="space-y-3 rounded-3xl border border-emerald-100/60 bg-emerald-50/35 p-4 ring-1 ring-emerald-900/[0.04]">
+              <SkeletonBlock className="h-4 w-36 rounded-md" />
+              <SkeletonBlock className="h-3 w-52 rounded-md" />
+            </div>
+            <SkeletonThumbGrid count={8} />
           </div>
-          <div className="hidden lg:block h-[580px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
+          <SkeletonSidebarColumn className="hidden lg:block" />
         </div>
       </div>
-    </div>
+    </AppLoadingShell>
   );
 }

@@ -1,8 +1,5 @@
 import DefaultAppLoadingFallback from "@/components/ui/default-app-loading-fallback";
 
-/**
- * Fallback when a segment has no loading.js (e.g. home redirect).
- */
-export default function RootLoading() {
+export default function SignupLoading() {
   return <DefaultAppLoadingFallback />;
 }

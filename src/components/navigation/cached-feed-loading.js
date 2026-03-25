@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  AppLoadingShell,
+  SkeletonComposerRow,
+  SkeletonNavBar,
+  SkeletonPostCard,
+  SkeletonSidebarColumn,
+} from "@/components/ui/app-loading-shell";
 import { useFeedRouteSnapshot } from "@/lib/navigation/use-route-snapshot";
 
 export default function CachedFeedLoading() {
@@ -7,17 +14,17 @@ export default function CachedFeedLoading() {
 
   if (snapshot?.posts?.length) {
     return (
-      <div className="min-h-screen bg-[#F1F8F1]">
+      <AppLoadingShell>
         <div className="mx-auto max-w-6xl px-4 py-6">
-          <div className="h-14 w-full rounded-3xl bg-white/70 shadow-sm" />
+          <SkeletonNavBar className="h-14 w-full rounded-3xl" />
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_320px]">
-            <div className="hidden lg:block h-[520px] rounded-3xl bg-white/70 shadow-sm" />
+            <SkeletonSidebarColumn className="hidden min-h-[520px] lg:block" />
             <div className="flex flex-col gap-5">
-              <div className="h-[110px] rounded-3xl bg-white/80 shadow-sm" />
+              <SkeletonComposerRow />
               {snapshot.posts.map((post) => (
                 <article
                   key={post.id}
-                  className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm"
+                  className="rounded-3xl border border-emerald-100/90 bg-emerald-50/80 p-4 shadow-sm ring-1 ring-emerald-900/[0.04]"
                 >
                   <p className="text-sm font-semibold text-zinc-900">
                     {post.authorHeadline || "PetSpot"}
@@ -32,38 +39,30 @@ export default function CachedFeedLoading() {
                 </article>
               ))}
             </div>
-            <div className="hidden lg:block h-[520px] rounded-3xl bg-white/70 shadow-sm" />
+            <SkeletonSidebarColumn className="hidden min-h-[520px] lg:block" />
           </div>
         </div>
-      </div>
+      </AppLoadingShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F8F1]">
+    <AppLoadingShell>
       <div className="mx-auto max-w-6xl px-4 py-6">
-        <div className="h-14 w-full animate-pulse rounded-3xl bg-white/70 shadow-sm" />
+        <SkeletonNavBar className="h-14 w-full rounded-3xl" />
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_320px]">
-          <div className="hidden lg:block">
-            <div className="h-[520px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
+          <SkeletonSidebarColumn className="hidden lg:block" />
+
+          <div className="flex flex-col gap-5">
+            <SkeletonComposerRow />
+            <SkeletonPostCard />
+            <SkeletonPostCard />
           </div>
 
-          <div>
-            <div className="h-[110px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-            <div className="mt-5 h-[170px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-
-            <div className="mt-5 flex flex-col gap-5">
-              <div className="h-[520px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-              <div className="h-[520px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-            </div>
-          </div>
-
-          <div className="hidden lg:block">
-            <div className="h-[520px] animate-pulse rounded-3xl bg-white/70 shadow-sm" />
-          </div>
+          <SkeletonSidebarColumn className="hidden lg:block" />
         </div>
       </div>
-    </div>
+    </AppLoadingShell>
   );
 }
