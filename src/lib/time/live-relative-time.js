@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 /**
  * @param {string | null | undefined} isoString
@@ -36,9 +36,10 @@ export function formatRelativeTimeAgo(isoString, nowMs = Date.now()) {
  * Recomputes the label on a schedule that speeds up for newer posts (feels "live").
  */
 export function useLiveRelativeTime(isoString) {
-  const [now, setNow] = useState(() => Date.now());
+  /** `null` until after mount so SSR and the first client pass match (no Date.now() drift). */
+  const [now, setNow] = useState(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isoString) return undefined;
 
     let timeoutId;
@@ -63,5 +64,6 @@ export function useLiveRelativeTime(isoString) {
   }, [isoString]);
 
   if (!isoString) return "";
+  if (now === null) return "";
   return formatRelativeTimeAgo(isoString, now);
 }

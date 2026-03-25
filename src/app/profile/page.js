@@ -1,6 +1,7 @@
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
+import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
 import { formatProfileHeadline } from "@/lib/profile";
 import { loadProfileData } from "@/lib/profile/load-profile-cached-data";
@@ -49,8 +50,19 @@ export default async function ProfilePage() {
   });
   const sidebarProfileName = formatProfileHeadline(profile?.owner_display_name, profile?.pet_name);
 
+  const profileSnapshot = {
+    headline: sidebarProfileName,
+    petName: profile?.pet_name ?? "",
+    avatarUrl: profile?.profile_image_url ?? "",
+    coverUrl: profile?.background_image_url ?? "",
+    followerCount: followerCount ?? 0,
+    followingCount: followingCount ?? 0,
+    galleryThumbs: galleryImageItems.slice(0, 8).map((item) => ({ id: item.id, url: item.url })),
+  };
+
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
+      <RouteSnapshotWriter routeKey="/profile" snapshot={profileSnapshot} />
       <FeedTopNav active="profile" />
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_2fr_1fr]">

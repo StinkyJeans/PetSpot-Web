@@ -4,6 +4,7 @@ import FeedStories from "@/components/feed/feed-stories";
 import FeedTopNav from "@/components/feed/feed-top-nav";
 import PostCard from "@/components/feed/post-card";
 import PostComposer from "@/components/feed/post-composer";
+import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
 import { loadFeedData } from "@/lib/feed/load-feed-data";
 import { formatProfileHeadline } from "@/lib/profile";
 
@@ -15,9 +16,28 @@ export default async function FeedPage() {
 
   const viewerAvatar = primaryPet?.profile_image_url ?? "";
   const sidebarProfileName = formatProfileHeadline(primaryPet?.owner_display_name, primaryPet?.pet_name);
+  const feedSnapshot = {
+    viewerName: sidebarProfileName,
+    viewerAvatar: viewerAvatar,
+    posts: postRows.slice(0, 8).map((post) => ({
+      id: post.id,
+      caption: post.caption ?? "",
+      authorHeadline: formatProfileHeadline(
+        post?.pet_profiles?.owner_display_name,
+        post?.pet_profiles?.pet_name,
+      ),
+      mediaUrl:
+        post.media_url ||
+        post.image_url ||
+        post?.shared_post?.media_url ||
+        post?.shared_post?.image_url ||
+        "",
+    })),
+  };
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
+      <RouteSnapshotWriter routeKey="/feed" snapshot={feedSnapshot} />
       <FeedTopNav active="feed" />
 
       <FeedShell
@@ -28,7 +48,10 @@ export default async function FeedPage() {
       >
         <FeedStories />
         <div id="create">
-          <PostComposer />
+          <PostComposer
+            viewerName={sidebarProfileName}
+            viewerAvatarUrl={viewerAvatar}
+          />
         </div>
         <div className="flex flex-col gap-5">
           {postRows.length === 0 ? (

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedTopNav from "@/components/feed/feed-top-nav";
+import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
+
+const newEventSnapshot = {
+  title: "Create event",
+  subtitle: "Event creation is coming soon.",
+};
 
 export default async function NewEventPage() {
   const user = await requireUser();
@@ -8,6 +14,7 @@ export default async function NewEventPage() {
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
+      <RouteSnapshotWriter routeKey="/events/new" snapshot={newEventSnapshot} />
       <FeedTopNav active="feed" />
       <main className="mx-auto max-w-lg px-4 py-12 text-center">
         <h1 className="text-xl font-bold text-zinc-900">Create event</h1>

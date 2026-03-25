@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedTopNav from "@/components/feed/feed-top-nav";
+import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
+
+const adoptSnapshot = {
+  title: "Adopt",
+  subtitle: "Adoption listings are coming soon.",
+};
 
 export default async function AdoptPage() {
   const user = await requireUser();
@@ -8,6 +14,7 @@ export default async function AdoptPage() {
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
+      <RouteSnapshotWriter routeKey="/adopt" snapshot={adoptSnapshot} />
       <FeedTopNav active="adopt" />
       <main className="mx-auto max-w-lg px-4 py-12 text-center">
         <h1 className="text-xl font-bold text-zinc-900">Adopt</h1>

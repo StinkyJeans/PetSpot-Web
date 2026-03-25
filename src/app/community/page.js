@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedTopNav from "@/components/feed/feed-top-nav";
+import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
+
+const communitySnapshot = {
+  title: "Community",
+  subtitle: "Community features are coming soon.",
+};
 
 export default async function CommunityPage() {
   const user = await requireUser();
@@ -8,6 +14,7 @@ export default async function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
+      <RouteSnapshotWriter routeKey="/community" snapshot={communitySnapshot} />
       <FeedTopNav active="community" />
       <main className="mx-auto max-w-lg px-4 py-12 text-center">
         <h1 className="text-xl font-bold text-zinc-900">Community</h1>

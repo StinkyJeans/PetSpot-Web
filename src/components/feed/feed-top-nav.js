@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search } from "griddy-icons";
 
 const navInactive = "border-b-2 border-transparent pb-0.5 text-sm font-medium text-zinc-600 hover:text-emerald-900";
@@ -17,12 +17,17 @@ function getActiveNav(pathname) {
 
 export default function FeedTopNav({ active }) {
   const pathname = usePathname();
+  const router = useRouter();
   const current = active ?? getActiveNav(pathname);
+
+  function prefetch(href) {
+    router.prefetch(href);
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-emerald-100/80 bg-[#F1F8F1]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <Link href="/feed" className="leading-tight">
+        <Link href="/feed" className="leading-tight" onMouseEnter={() => prefetch("/feed")}>
           <span className="block text-xl font-bold tracking-tight text-emerald-950">PetSpot</span>
           <span className="block text-[11px] font-medium text-emerald-800/90">Discover the pack</span>
         </Link>
@@ -39,16 +44,32 @@ export default function FeedTopNav({ active }) {
         </div>
 
         <nav className="hidden items-center gap-6 md:flex">
-          <Link href="/feed" className={current === "feed" ? navActive : navInactive}>
+          <Link
+            href="/feed"
+            className={current === "feed" ? navActive : navInactive}
+            onMouseEnter={() => prefetch("/feed")}
+          >
             Feed
           </Link>
-          <Link href="/market" className={current === "market" ? navActive : navInactive}>
+          <Link
+            href="/market"
+            className={current === "market" ? navActive : navInactive}
+            onMouseEnter={() => prefetch("/market")}
+          >
             Market
           </Link>
-          <Link href="/adopt" className={current === "adopt" ? navActive : navInactive}>
+          <Link
+            href="/adopt"
+            className={current === "adopt" ? navActive : navInactive}
+            onMouseEnter={() => prefetch("/adopt")}
+          >
             Adopt
           </Link>
-          <Link href="/community" className={current === "community" ? navActive : navInactive}>
+          <Link
+            href="/community"
+            className={current === "community" ? navActive : navInactive}
+            onMouseEnter={() => prefetch("/community")}
+          >
             Community
           </Link>
         </nav>
