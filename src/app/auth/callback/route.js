@@ -16,9 +16,16 @@ export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const redirectTo = requestUrl.origin;
+  const emailConfirm = requestUrl.searchParams.get("email_confirm") === "1";
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=Missing+auth+code", redirectTo));
+  }
+
+  if (emailConfirm) {
+    // Email confirmation should not immediately log the user in.
+    // Just show success and send them to the login screen.
+    return NextResponse.redirect(new URL("/login?success=email+confirmed", redirectTo));
   }
 
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();

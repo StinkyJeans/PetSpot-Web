@@ -7,7 +7,7 @@ import { ArrowRight, Email, Google, Password } from "griddy-icons";
 
 const initialState = { error: "" };
 
-export default function LoginForm({ initialError }) {
+export default function LoginForm({ initialError, initialSuccess }) {
   const [state, loginAction, pending] = useActionState(
     loginWithPassword,
     initialState,
@@ -23,6 +23,12 @@ export default function LoginForm({ initialError }) {
       <p className="mt-2 text-center text-sm text-zinc-600">
         Log in to continue to PetSpot.
       </p>
+
+      {initialSuccess ? (
+        <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-sm font-semibold text-emerald-900">
+          {initialSuccess}
+        </p>
+      ) : null}
 
       <form action={signInWithGoogle} className="mt-6">
         <button

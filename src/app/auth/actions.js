@@ -36,7 +36,7 @@ export async function signupWithPassword(_, formData) {
     password,
     options: {
       // Ensures the email confirmation link returns to the correct deployed host.
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback?email_confirm=1`,
     },
   });
 

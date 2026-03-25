@@ -12,6 +12,8 @@ export default async function LoginPage({ searchParams }) {
   const query = await searchParams;
   const initialError =
     query?.error && typeof query.error === "string" ? query.error : "";
+  const initialSuccess =
+    query?.success && typeof query.success === "string" ? query.success : "";
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
@@ -20,7 +22,7 @@ export default async function LoginPage({ searchParams }) {
         style={{ backgroundImage: "url('/background-image/Pet.png')" }}
       />
       <div className="absolute inset-0 bg-[#edf4e9]/70" />
-      <LoginForm initialError={initialError} />
+      <LoginForm initialError={initialError} initialSuccess={initialSuccess} />
     </main>
   );
 }
