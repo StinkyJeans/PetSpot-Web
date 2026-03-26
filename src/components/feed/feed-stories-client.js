@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Plus } from "griddy-icons";
 import { useStoriesRealtime } from "@/lib/stories/use-stories-realtime";
 import { useToast } from "@/components/feedback/toast-provider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createStory } from "@/app/stories/actions";
 import StoryViewerModal from "@/components/stories/story-viewer-modal";
+import { formatRelativeTimeAgo } from "@/lib/time/live-relative-time";
 
 function storyInitial(headline) {
   const s = String(headline ?? "").replace(/&/g, "").trim();
@@ -28,8 +29,14 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
   const [uploadPending, startUploadTransition] = useTransition();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedPreviewUrl, setSelectedPreviewUrl] = useState("");
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const fileInputRef = useRef(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const ownerGroups = useMemo(() => {
     const byOwner = new Map();
@@ -126,6 +133,9 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
               </span>
               <span className="max-w-[72px] truncate text-xs font-semibold text-zinc-700">
                 {group.authorHeadline}
+              </span>
+              <span className="max-w-[72px] truncate text-[10px] font-medium text-zinc-400">
+                {formatRelativeTimeAgo(group.latestCreatedAt, nowMs) || "just now"}
               </span>
             </button>
           );

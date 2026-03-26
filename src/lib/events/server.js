@@ -33,8 +33,15 @@ export async function getEventSectionsForUserId(supabase, userId) {
     .limit(60);
 
   if (error || !rows?.length) {
-    return { myEvents: [], otherEvents: [] };
+    return { myEvents: [], otherEvents: [], followedEvents: [] };
   }
+
+  const { data: interestRows } = await supabase
+    .from("event_interests")
+    .select("event_id")
+    .eq("user_id", userId);
+
+  const followedIdSet = new Set((interestRows ?? []).map((r) => r.event_id).filter(Boolean));
 
   const ownerIds = [...new Set(rows.map((r) => r.owner_id).filter(Boolean))];
   let nameByOwner = {};
@@ -68,10 +75,14 @@ export async function getEventSectionsForUserId(supabase, userId) {
     eventType: r.event_type,
     purpose: r.purpose,
     authorName: nameByOwner[r.owner_id] || "PetSpot user",
+    isInterested: followedIdSet.has(r.id),
   }));
 
   const myEvents = mapped.filter((e) => e.ownerId === userId).slice(0, 30);
-  const otherEvents = mapped.filter((e) => e.ownerId !== userId).slice(0, 6);
+  // Other people's events excludes already-followed/interested events.
+  const otherEvents = mapped.filter((e) => e.ownerId !== userId && !e.isInterested).slice(0, 20);
 
-  return { myEvents, otherEvents };
+  const followedEvents = mapped.filter((e) => e.isInterested).slice(0, 20);
+
+  return { myEvents, otherEvents, followedEvents };
 }

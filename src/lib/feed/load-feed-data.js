@@ -39,7 +39,7 @@ export async function loadFeedData(userId) {
   const postRows = posts ?? [];
   const postIds = postRows.map((p) => p.id);
   const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, userId);
-  const { myEvents, otherEvents } = await getEventSectionsForUserId(supabase, userId);
+  const { myEvents, otherEvents, followedEvents } = await getEventSectionsForUserId(supabase, userId);
 
   if (process.env.NODE_ENV === "development") {
     const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -54,5 +54,6 @@ export async function loadFeedData(userId) {
     shared,
     myEvents,
     otherEvents,
+    followedEvents,
   };
 }

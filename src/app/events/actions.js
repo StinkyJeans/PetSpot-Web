@@ -129,3 +129,44 @@ export async function getNextEventForUser() {
     purpose: data.purpose,
   };
 }
+
+export async function setEventInterested(eventId) {
+  const user = await requireUser();
+  const id = String(eventId ?? "").trim();
+  if (!id) return { error: "Missing event." };
+
+  const supabase = await getSupabaseServerClient();
+
+  // If already interested, keep it idempotent.
+  const { data: existing } = await supabase
+    .from("event_interests")
+    .select("event_id")
+    .eq("user_id", user.id)
+    .eq("event_id", id)
+    .maybeSingle();
+
+  if (!existing) {
+    const { error } = await supabase.from("event_interests").insert({
+      user_id: user.id,
+      event_id: id,
+    });
+    if (error) {
+      return { error: error.message || "Could not mark event as interested." };
+    }
+
+    const { error: notifyError } = await supabase.rpc("notify_event_interested", {
+      p_event_id: id,
+    });
+    if (notifyError) {
+      return {
+        error:
+          notifyError.message ||
+          "Event notification failed. Run the latest notifications migration.",
+      };
+    }
+  }
+
+  revalidateTag("profile");
+  revalidateTag("feed");
+  return { error: "", interested: true };
+}

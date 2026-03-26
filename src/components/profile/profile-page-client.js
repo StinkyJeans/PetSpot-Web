@@ -12,11 +12,16 @@ export function ProfileRightPanel({
   aboutMe,
   myEvents,
   otherEvents,
+  followedEvents = [],
 }) {
   return (
     <div className="flex flex-col gap-5">
       <ProfileAboutCard aboutMe={aboutMe} />
-      <EventSection myEvents={myEvents} otherEvents={otherEvents} />
+      <EventSection
+        myEvents={myEvents}
+        otherEvents={otherEvents}
+        followedEvents={followedEvents}
+      />
     </div>
   );
 }
@@ -39,6 +44,9 @@ export default function ProfilePageClient({
   postFeedItems = [],
   viewerUserId,
   viewerPetAvatarUrl,
+  isOwnProfile = true,
+  profileUserId,
+  isFollowing = false,
 }) {
   const [showStatsDetails, setShowStatsDetails] = useState(false);
   const viewerCommentLabel = formatProfileHeadline(ownerDisplayName, petName);
@@ -53,6 +61,9 @@ export default function ProfilePageClient({
         profileImageUrl={profileImageUrl}
         backgroundImageUrl={backgroundImageUrl}
         onViewStatsDetails={() => setShowStatsDetails(true)}
+        isOwnProfile={isOwnProfile}
+        targetUserId={profileUserId ?? null}
+        isFollowing={isFollowing}
       />
       <ProfileGallery
         imageItems={galleryImageItems}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/feedback/toast-provider";
 import { ChatBubble, Heart, ShareIos } from "griddy-icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useLiveRelativeTime } from "@/lib/time/live-relative-time";
 
 export default function StoryViewerModal({
   ownerGroups,
@@ -59,6 +60,7 @@ export default function StoryViewerModal({
   }, [currentOwner, currentStoryIndex]);
 
   const currentStoryId = currentStory?.id;
+  const storyTimeLive = useLiveRelativeTime(currentStory?.createdAt ?? null);
   const uploadComplete = currentStory?.uploadComplete ?? true;
   const ownerStories = currentOwner?.stories ?? [];
   const ownerStoryCount = ownerStories.length;
@@ -304,6 +306,9 @@ export default function StoryViewerModal({
               <span className="min-w-0 truncate text-sm font-semibold text-white">
                 {currentStory.authorHeadline}
               </span>
+              {storyTimeLive ? (
+                <span className="shrink-0 text-xs font-medium text-white/80">{storyTimeLive}</span>
+              ) : null}
             </div>
 
             <div />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
@@ -201,11 +202,15 @@ export default function PostCard({
 
   return (
     <article
+      id={post?.id ? `post-${post.id}` : undefined}
       ref={engagementRtRef}
       className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm"
     >
       <header className="flex items-start justify-between gap-3 p-4 pb-2">
-        <div className="flex items-center gap-3">
+        <Link
+          href={`/profile/${post.owner_id}`}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg outline-none ring-emerald-800/30 hover:bg-emerald-50/80 focus-visible:ring-2"
+        >
           <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
             {authorAvatar ? (
               <img src={authorAvatar} alt="" className="h-full w-full object-cover" />
@@ -215,13 +220,13 @@ export default function PostCard({
               </span>
             )}
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-900">{headline}</p>
             <p className="text-xs text-zinc-500">
               {[breed, authorLocation, postTimeLive].filter(Boolean).join(" · ") || "PetSpot"}
             </p>
           </div>
-        </div>
+        </Link>
         {canDelete ? (
           <div className="relative shrink-0" ref={menuRef}>
             <button

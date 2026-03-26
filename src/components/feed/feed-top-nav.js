@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search } from "griddy-icons";
+import FeedNotificationsDropdown from "@/components/feed/feed-notifications-dropdown";
 
 const navInactive = "border-b-2 border-transparent pb-0.5 text-sm font-medium text-zinc-600 hover:text-emerald-900";
 const navActive =
@@ -12,6 +13,7 @@ function getActiveNav(pathname) {
   if (pathname.startsWith("/market")) return "market";
   if (pathname.startsWith("/adopt")) return "adopt";
   if (pathname.startsWith("/community")) return "community";
+  if (pathname.startsWith("/profile")) return "profile";
   return "feed";
 }
 
@@ -43,36 +45,39 @@ export default function FeedTopNav({ active }) {
           />
         </div>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link
-            href="/feed"
-            className={current === "feed" ? navActive : navInactive}
-            onMouseEnter={() => prefetch("/feed")}
-          >
-            Feed
-          </Link>
-          <Link
-            href="/market"
-            className={current === "market" ? navActive : navInactive}
-            onMouseEnter={() => prefetch("/market")}
-          >
-            Market
-          </Link>
-          <Link
-            href="/adopt"
-            className={current === "adopt" ? navActive : navInactive}
-            onMouseEnter={() => prefetch("/adopt")}
-          >
-            Adopt
-          </Link>
-          <Link
-            href="/community"
-            className={current === "community" ? navActive : navInactive}
-            onMouseEnter={() => prefetch("/community")}
-          >
-            Community
-          </Link>
-        </nav>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <nav className="hidden items-center gap-6 md:flex">
+            <Link
+              href="/feed"
+              className={current === "feed" ? navActive : navInactive}
+              onMouseEnter={() => prefetch("/feed")}
+            >
+              Feed
+            </Link>
+            <Link
+              href="/market"
+              className={current === "market" ? navActive : navInactive}
+              onMouseEnter={() => prefetch("/market")}
+            >
+              Market
+            </Link>
+            <Link
+              href="/adopt"
+              className={current === "adopt" ? navActive : navInactive}
+              onMouseEnter={() => prefetch("/adopt")}
+            >
+              Adopt
+            </Link>
+            <Link
+              href="/community"
+              className={current === "community" ? navActive : navInactive}
+              onMouseEnter={() => prefetch("/community")}
+            >
+              Community
+            </Link>
+          </nav>
+          <FeedNotificationsDropdown />
+        </div>
       </div>
     </header>
   );

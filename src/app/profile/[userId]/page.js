@@ -1,32 +1,43 @@
+import { notFound, redirect } from "next/navigation";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
 import FeedLeftSidebar from "@/components/feed/feed-left-sidebar";
 import FeedTopNav from "@/components/feed/feed-top-nav";
-import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
 import ProfilePageClient, { ProfileRightPanel } from "@/components/profile/profile-page-client";
 import { formatProfileHeadline } from "@/lib/profile";
-import { loadProfileData } from "@/lib/profile/load-profile-cached-data";
+import { loadProfileDataForUser } from "@/lib/profile/load-profile-cached-data";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function ProfilePage() {
+function isUuid(s) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+}
+
+export default async function OtherUserProfilePage({ params }) {
   const user = await requireUser();
   await requirePrimaryPetProfile(user.id);
+  const { userId: raw } = await params;
+  const profileUserId = String(raw ?? "");
+  if (!isUuid(profileUserId)) notFound();
+  if (profileUserId === user.id) {
+    redirect("/profile");
+  }
 
-  const {
-    profile,
-    profileUserId,
-    isOwnProfile,
-    isFollowing,
-    followerCount,
-    followingCount,
-    postRows,
-    counts,
-    liked,
-    shared,
-    myEvents,
-    otherEvents,
-    followedEvents,
-  } = await loadProfileData(user.id);
+  const supabase = await getSupabaseServerClient();
+  const { data: viewerPet } = await supabase
+    .from("pet_profiles")
+    .select("owner_display_name, pet_name, profile_image_url")
+    .eq("owner_id", user.id)
+    .eq("is_primary", true)
+    .maybeSingle();
 
-  const viewerAvatar = profile?.profile_image_url ?? "";
+  const viewerSidebarName = formatProfileHeadline(viewerPet?.owner_display_name, viewerPet?.pet_name);
+  const viewerAvatar = viewerPet?.profile_image_url ?? "";
+
+  const data = await loadProfileDataForUser(profileUserId, user.id);
+  if (!data.profile) notFound();
+
+  const { profile, followerCount, followingCount, postRows, counts, liked, shared, myEvents, otherEvents, isFollowing } =
+    data;
+  const { followedEvents = [] } = data;
 
   const galleryImageItems = [];
   const galleryVideoItems = [];
@@ -52,21 +63,9 @@ export default async function ProfilePage() {
       shared: shared.has(post.id),
     };
   });
-  const sidebarProfileName = formatProfileHeadline(profile?.owner_display_name, profile?.pet_name);
-
-  const profileSnapshot = {
-    headline: sidebarProfileName,
-    petName: profile?.pet_name ?? "",
-    avatarUrl: profile?.profile_image_url ?? "",
-    coverUrl: profile?.background_image_url ?? "",
-    followerCount: followerCount ?? 0,
-    followingCount: followingCount ?? 0,
-    galleryThumbs: galleryImageItems.slice(0, 8).map((item) => ({ id: item.id, url: item.url })),
-  };
 
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
-      <RouteSnapshotWriter routeKey="/profile" snapshot={profileSnapshot} />
       <FeedTopNav active="profile" />
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_2fr_1fr]">
@@ -74,8 +73,8 @@ export default async function ProfilePage() {
           <div className="lg:fixed lg:bottom-4 lg:left-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
             <FeedLeftSidebar
               showEventSection={false}
-              profileName={sidebarProfileName}
-              profileImageUrl={profile?.profile_image_url ?? ""}
+              profileName={viewerSidebarName}
+              profileImageUrl={viewerAvatar}
             />
           </div>
         </aside>
@@ -99,7 +98,7 @@ export default async function ProfilePage() {
             postFeedItems={postFeedItems}
             viewerUserId={user.id}
             viewerPetAvatarUrl={viewerAvatar}
-            isOwnProfile={isOwnProfile}
+            isOwnProfile={false}
             profileUserId={profileUserId}
             isFollowing={isFollowing}
           />

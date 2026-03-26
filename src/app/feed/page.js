@@ -12,7 +12,8 @@ export default async function FeedPage() {
   const user = await requireUser();
   await requirePrimaryPetProfile(user.id);
 
-  const { primaryPet, postRows, counts, liked, shared, myEvents, otherEvents } = await loadFeedData(user.id);
+  const { primaryPet, postRows, counts, liked, shared, myEvents, otherEvents, followedEvents } =
+    await loadFeedData(user.id);
 
   const viewerAvatar = primaryPet?.profile_image_url ?? "";
   const sidebarProfileName = formatProfileHeadline(primaryPet?.owner_display_name, primaryPet?.pet_name);
@@ -43,6 +44,7 @@ export default async function FeedPage() {
       <FeedShell
         myEvents={myEvents}
         otherEvents={otherEvents}
+        followedEvents={followedEvents}
         profileName={sidebarProfileName}
         profileImageUrl={viewerAvatar}
       >

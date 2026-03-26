@@ -9,6 +9,7 @@ export default function FeedShell({
   children,
   myEvents = [],
   otherEvents = [],
+  followedEvents = [],
   profileName = "Profile",
   profileImageUrl = "",
 }) {
@@ -30,7 +31,11 @@ export default function FeedShell({
         <aside className="hidden lg:block">
           <div className="lg:fixed lg:bottom-4 lg:right-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
             <FeedRightSidebar>
-              <EventSection myEvents={myEvents} otherEvents={otherEvents} />
+              <EventSection
+                myEvents={myEvents}
+                otherEvents={otherEvents}
+                followedEvents={followedEvents}
+              />
             </FeedRightSidebar>
           </div>
         </aside>
@@ -44,7 +49,7 @@ export default function FeedShell({
             profileImageUrl={profileImageUrl}
           />
           <FeedRightSidebar>
-            <EventSection myEvents={myEvents} otherEvents={otherEvents} />
+            <EventSection myEvents={myEvents} otherEvents={otherEvents} followedEvents={followedEvents} />
           </FeedRightSidebar>
         </div>
       </div>

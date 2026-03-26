@@ -15,7 +15,7 @@ const explore = [
 ];
 
 function getActiveByRoute(pathname, section) {
-  if (pathname.startsWith("/profile")) return section === "memories" ? "memories" : "profile";
+  if (pathname === "/profile") return section === "memories" ? "memories" : "profile";
   if (pathname.startsWith("/feed")) return "trending";
   if (pathname.startsWith("/events")) return "events";
   if (pathname.startsWith("/community")) return "groups";
@@ -25,6 +25,7 @@ function getActiveByRoute(pathname, section) {
 export default function FeedLeftSidebar({
   myEvents = [],
   otherEvents = [],
+  followedEvents = [],
   activeItem,
   showEventSection = true,
   profileName = "Profile",
@@ -97,7 +98,13 @@ export default function FeedLeftSidebar({
         </div>
       </div>
 
-      {showEventSection ? <EventSection myEvents={myEvents} otherEvents={otherEvents} /> : null}
+      {showEventSection ? (
+        <EventSection
+          myEvents={myEvents}
+          otherEvents={otherEvents}
+          followedEvents={followedEvents}
+        />
+      ) : null}
     </div>
   );
 }

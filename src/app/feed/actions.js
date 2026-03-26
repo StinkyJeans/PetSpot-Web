@@ -284,6 +284,7 @@ export async function togglePostLike(formData) {
     await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
   } else {
     await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+    await supabase.rpc("notify_post_liked", { p_post_id: postId });
   }
 }
 
@@ -429,6 +430,18 @@ export async function addPostComment(prevOrForm, maybeForm) {
     return { error: error?.message || "Could not add comment." };
   }
 
+  if (parentCommentId) {
+    await supabase.rpc("notify_comment_replied", {
+      p_parent_comment_id: parentCommentId,
+      p_reply_comment_id: row.id,
+    });
+  } else {
+    await supabase.rpc("notify_post_commented", {
+      p_post_id: postId,
+      p_comment_id: row.id,
+    });
+  }
+
   const { data: pet } = await supabase
     .from("pet_profiles")
     .select("owner_id, pet_name, owner_display_name, profile_image_url")
@@ -474,6 +487,7 @@ export async function togglePostCommentLike(commentId) {
     await supabase.from("post_comment_likes").delete().eq("comment_id", id).eq("user_id", user.id);
   } else {
     await supabase.from("post_comment_likes").insert({ comment_id: id, user_id: user.id });
+    await supabase.rpc("notify_comment_liked", { p_comment_id: id });
   }
 
   const liked = !existing;
