@@ -8,6 +8,7 @@ import {
   SkeletonSidebarColumn,
   SkeletonThumbGrid,
 } from "@/components/ui/app-loading-shell";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { useRouteSnapshot } from "@/lib/navigation/use-route-snapshot";
 
 export default function CachedProfileLoading() {
@@ -34,7 +35,14 @@ export default function CachedProfileLoading() {
                   <span className="flex h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-emerald-100/80 bg-emerald-100/50 shadow-sm">
                     {snapshot.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={snapshot.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={getOptimizedImageUrl(snapshot.avatarUrl, { width: 192, height: 192 })}
+                        alt=""
+                        width={96}
+                        height={96}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-emerald-900">
                         {(snapshot.petName || snapshot.headline || "?").slice(0, 1).toUpperCase()}
@@ -58,7 +66,14 @@ export default function CachedProfileLoading() {
                       className="aspect-square overflow-hidden rounded-2xl bg-emerald-100/40 ring-1 ring-emerald-900/[0.05]"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={thumb.url} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={getOptimizedImageUrl(thumb.url, { width: 360, height: 360 })}
+                        alt=""
+                        width={180}
+                        height={180}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>

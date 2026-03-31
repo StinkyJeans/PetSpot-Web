@@ -8,6 +8,7 @@ import {
   markAllNotificationsRead,
   markNotificationsRead,
 } from "@/app/notifications/actions";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function labelForType(type, isFollowBack = false, eventTitle = "", eventWhen = "", eventPlace = "") {
@@ -186,7 +187,14 @@ export default function FeedNotificationsDropdown() {
                       <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-emerald-100">
                         {n.actorAvatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={n.actorAvatarUrl} alt="" className="h-full w-full object-cover" />
+                          <img
+                            src={getOptimizedImageUrl(n.actorAvatarUrl, { width: 80, height: 80 })}
+                            alt=""
+                            width={40}
+                            height={40}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           <span className="flex h-full w-full items-center justify-center text-xs font-bold text-emerald-900">
                             {n.actorHeadline.slice(0, 1).toUpperCase()}

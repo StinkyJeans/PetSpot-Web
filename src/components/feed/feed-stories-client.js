@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Plus } from "griddy-icons";
 import { useStoriesRealtime } from "@/lib/stories/use-stories-realtime";
 import { useToast } from "@/components/feedback/toast-provider";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createStory } from "@/app/stories/actions";
 import StoryViewerModal from "@/components/stories/story-viewer-modal";
@@ -121,8 +122,11 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
               >
                 {group.authorAvatarUrl ? (
                   <img
-                    src={group.authorAvatarUrl}
+                    src={getOptimizedImageUrl(group.authorAvatarUrl, { width: 112, height: 112 })}
                     alt=""
+                    width={56}
+                    height={56}
+                    loading="lazy"
                     className="h-[56px] w-[56px] rounded-full object-cover"
                   />
                 ) : (
@@ -197,6 +201,9 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                     <video
                       src={selectedPreviewUrl}
                       controls
+                      preload="none"
+                      width={755}
+                      height={425}
                       className="max-h-[52vh] w-full object-contain"
                     />
                   ) : (
@@ -204,6 +211,9 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                     <img
                       src={selectedPreviewUrl}
                       alt=""
+                      width={755}
+                      height={425}
+                      loading="lazy"
                       className="max-h-[52vh] w-full object-contain"
                     />
                   )}

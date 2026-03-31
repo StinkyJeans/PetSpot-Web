@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPost } from "@/app/feed/actions";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { buildUserMediaPath } from "@/lib/storage/helpers";
 
@@ -202,7 +203,14 @@ export default function PostComposer({ viewerName = "PetSpot User", viewerAvatar
         <div className="flex items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-100">
             {viewerAvatarUrl ? (
-              <img src={viewerAvatarUrl} alt="" className="h-full w-full object-cover" />
+              <img
+                src={getOptimizedImageUrl(viewerAvatarUrl, { width: 80, height: 80 })}
+                alt=""
+                width={40}
+                height={40}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <span className="text-sm font-bold text-emerald-900">
                 {initialFromName(viewerName)}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatCount } from "@/components/feed/format-count";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { formatRelativeTimeAgo } from "@/lib/time/live-relative-time";
 import { formatProfileHeadline } from "@/lib/profile";
 import { ChatBubble, Heart, ShareIos } from "griddy-icons";
@@ -88,7 +89,14 @@ function CommentThreadItem({ comment, depth, onReply, onToggleCommentLike, comme
       <div className="flex gap-2">
         <span className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
           {comment.authorAvatarUrl ? (
-            <img src={comment.authorAvatarUrl} alt="" className="h-full w-full object-cover" />
+            <img
+              src={getOptimizedImageUrl(comment.authorAvatarUrl, { width: 64, height: 64 })}
+              alt=""
+              width={32}
+              height={32}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-emerald-900">
               {initial}
@@ -309,7 +317,14 @@ function PostCommentsModalInner({
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
                 {authorAvatar ? (
-                  <img src={authorAvatar} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={getOptimizedImageUrl(authorAvatar, { width: 80, height: 80 })}
+                    alt=""
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-xs font-bold text-emerald-800">
                     {headline.slice(0, 1)}
@@ -340,16 +355,37 @@ function PostCommentsModalInner({
             {normalizedSharedPost ? (
               <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50/50">
                 {sharedMediaKind === "video" && sharedMediaSrc ? (
-                  <video src={sharedMediaSrc} controls className="max-h-[220px] w-full bg-zinc-900 object-contain" />
+                  <video
+                    src={sharedMediaSrc}
+                    controls
+                    preload="none"
+                    width={755}
+                    height={425}
+                    className="max-h-[220px] w-full bg-zinc-900 object-contain"
+                  />
                 ) : null}
                 {(sharedMediaKind === "image" && sharedMediaSrc) || (!sharedMediaKind && sharedMediaSrc) ? (
-                  <img src={sharedMediaSrc} alt="" className="max-h-[220px] w-full object-cover" />
+                  <img
+                    src={getOptimizedImageUrl(sharedMediaSrc, { width: 800 })}
+                    alt=""
+                    width={755}
+                    height={425}
+                    loading="lazy"
+                    className="max-h-[220px] w-full object-cover"
+                  />
                 ) : null}
                 <div className="border-t border-zinc-100 bg-white px-3 py-2">
                   <div className="flex gap-2">
                     <span className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100">
                       {sharedAvatar ? (
-                        <img src={sharedAvatar} alt="" className="h-full w-full object-cover" />
+                        <img
+                          src={getOptimizedImageUrl(sharedAvatar, { width: 64, height: 64 })}
+                          alt=""
+                          width={32}
+                          height={32}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-zinc-700">
                           {sharedHeadline.slice(0, 1)}
@@ -370,12 +406,26 @@ function PostCommentsModalInner({
 
             {!normalizedSharedPost && mediaKind === "video" && mediaSrc ? (
               <div className="mt-3">
-                <video src={mediaSrc} controls className="max-h-[240px] w-full rounded-xl object-cover" />
+                <video
+                  src={mediaSrc}
+                  controls
+                  preload="none"
+                  width={755}
+                  height={425}
+                  className="max-h-[240px] w-full rounded-xl object-cover"
+                />
               </div>
             ) : null}
             {!normalizedSharedPost && ((mediaKind === "image" && mediaSrc) || (!mediaKind && mediaSrc)) ? (
               <div className="mt-3 overflow-hidden rounded-xl bg-zinc-100">
-                <img src={mediaSrc} alt="" className="max-h-[240px] w-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(mediaSrc, { width: 800 })}
+                  alt=""
+                  width={755}
+                  height={425}
+                  loading="lazy"
+                  className="max-h-[240px] w-full object-cover"
+                />
               </div>
             ) : null}
           </div>
@@ -438,7 +488,14 @@ function PostCommentsModalInner({
             <input type="hidden" name="parentCommentId" value={replyParentId ?? ""} />
             <span className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full bg-emerald-100 text-xs font-bold text-emerald-900">
               {viewerPetAvatarUrl ? (
-                <img src={viewerPetAvatarUrl} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(viewerPetAvatarUrl, { width: 72, height: 72 })}
+                  alt=""
+                  width={36}
+                  height={36}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="flex h-full w-full items-center justify-center text-[10px]">You</span>
               )}

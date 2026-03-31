@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { logout } from "@/app/auth/actions";
 import EventSection from "@/components/event/event-section";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Calendar, PhotoCamera, Plus, TrendUp, User, UsersGroup } from "griddy-icons";
 
@@ -44,7 +45,14 @@ export default function FeedLeftSidebar({
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50">
               {profileImageUrl ? (
-                <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(profileImageUrl, { width: 88, height: 88 })}
+                  alt=""
+                  width={44}
+                  height={44}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="flex h-full w-full items-center justify-center text-xs font-bold text-emerald-900">
                   {profileName.slice(0, 1).toUpperCase()}

@@ -16,6 +16,7 @@ import SharePostModal from "@/components/modal/post/share-post-modal";
 import { useDeleteFeedback } from "@/components/feedback/delete-feedback";
 import { useToast } from "@/components/feedback/toast-provider";
 import { formatCount } from "@/components/feed/format-count";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { usePostEngagementRealtime } from "@/lib/feed/use-post-engagement-realtime";
 import { useLiveRelativeTime } from "@/lib/time/live-relative-time";
 import { formatProfileHeadline } from "@/lib/profile";
@@ -150,6 +151,10 @@ export default function PostCard({
   const sharedBreed = sharedProfile?.breed || "";
   const sharedLocation = sharedProfile?.location || "";
   const sharedAvatar = sharedProfile?.profile_image_url || "";
+  const authorAvatarOptimized = getOptimizedImageUrl(authorAvatar, { width: 88, height: 88 });
+  const sharedAvatarOptimized = getOptimizedImageUrl(sharedAvatar, { width: 72, height: 72 });
+  const sharedMediaOptimized = getOptimizedImageUrl(sharedMediaSrc, { width: 800 });
+  const mediaOptimized = getOptimizedImageUrl(mediaSrc, { width: 800, height: 600 });
   const postTimeLive = useLiveRelativeTime(post.created_at ?? null);
   const originalPostTimeLive = useLiveRelativeTime(normalizedSharedPost?.created_at ?? null);
 
@@ -213,7 +218,14 @@ export default function PostCard({
         >
           <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
             {authorAvatar ? (
-              <img src={authorAvatar} alt="" className="h-full w-full object-cover" />
+              <img
+                src={authorAvatarOptimized}
+                alt=""
+                width={44}
+                height={44}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <span className="flex h-full w-full items-center justify-center text-xs font-bold text-emerald-800">
                 {headline.slice(0, 1)}
@@ -293,13 +305,19 @@ export default function PostCard({
             <video
               src={sharedMediaSrc}
               controls
+              preload="none"
+              width={755}
+              height={425}
               className="max-h-[min(420px,70vh)] w-full bg-zinc-900 object-contain"
             />
           ) : null}
           {(sharedMediaKind === "image" && sharedMediaSrc) || (!sharedMediaKind && sharedMediaSrc) ? (
             <img
-              src={sharedMediaSrc}
+              src={sharedMediaOptimized}
               alt=""
+              width={755}
+              height={425}
+              loading="lazy"
               className="max-h-[min(420px,70vh)] w-full bg-zinc-100 object-cover"
             />
           ) : null}
@@ -307,7 +325,14 @@ export default function PostCard({
             <div className="flex items-start gap-2">
               <span className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100">
                 {sharedAvatar ? (
-                  <img src={sharedAvatar} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={sharedAvatarOptimized}
+                    alt=""
+                    width={36}
+                    height={36}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-[11px] font-bold text-zinc-800">
                     {sharedHeadline.slice(0, 1)}
@@ -331,13 +356,27 @@ export default function PostCard({
 
       {!normalizedSharedPost && mediaKind === "video" && mediaSrc ? (
         <div className="px-4 pb-2">
-          <video src={mediaSrc} controls className="max-h-[420px] w-full rounded-2xl object-cover" />
+          <video
+            src={mediaSrc}
+            controls
+            preload="none"
+            width={755}
+            height={425}
+            className="max-h-[420px] w-full rounded-2xl object-cover"
+          />
         </div>
       ) : null}
       {!normalizedSharedPost && ((mediaKind === "image" && mediaSrc) || (!mediaKind && mediaSrc)) ? (
         <div className="px-4 pb-2">
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-100">
-            <img src={mediaSrc} alt="" className="h-full w-full object-cover" />
+            <img
+              src={mediaOptimized}
+              alt=""
+              width={755}
+              height={566}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
           </div>
         </div>
       ) : null}

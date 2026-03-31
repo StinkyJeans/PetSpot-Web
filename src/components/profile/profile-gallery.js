@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import PostCard from "@/components/feed/post-card";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { Grid } from "griddy-icons";
 
 export default function ProfileGallery({
@@ -109,9 +110,24 @@ export default function ProfileGallery({
               className="relative aspect-square overflow-hidden rounded-2xl bg-zinc-100"
             >
               {item.kind === "video" ? (
-                <video src={item.url} className="h-full w-full object-cover" muted playsInline />
+                <video
+                  src={item.url}
+                  preload="none"
+                  width={360}
+                  height={360}
+                  className="h-full w-full object-cover"
+                  muted
+                  playsInline
+                />
               ) : (
-                <img src={item.url} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(item.url, { width: 360, height: 360 })}
+                  alt=""
+                  width={180}
+                  height={180}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
           ))}

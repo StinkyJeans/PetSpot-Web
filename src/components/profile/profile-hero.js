@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateBackgroundPicture, updateProfilePicture } from "@/app/feed/actions";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { formatProfileHeadline } from "@/lib/profile";
 import { CheckVerified, MenuAlt03, Plus } from "griddy-icons";
 import ProfileFollowRow from "@/components/profile/profile-follow-row";
@@ -47,8 +48,11 @@ export default function ProfileHero({
       <div className="relative aspect-[21/9] min-h-[140px] bg-gradient-to-br from-emerald-100 to-emerald-50">
         {backgroundImageUrl ? (
           <img
-            src={backgroundImageUrl}
+            src={getOptimizedImageUrl(backgroundImageUrl, { width: 1400, height: 600 })}
             alt=""
+            width={1400}
+            height={600}
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
@@ -126,7 +130,15 @@ export default function ProfileHero({
                 <>
                   {profileImageUrl ? (
                     <>
-                      <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={getOptimizedImageUrl(profileImageUrl, { width: 224, height: 224 })}
+                        alt=""
+                        width={112}
+                        height={112}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                      
                       <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/35 hover:opacity-100">
                         <label className="cursor-pointer rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-emerald-900 shadow">
                           {isProfilePending ? "Uploading..." : "Change"}
@@ -188,7 +200,14 @@ export default function ProfileHero({
                   ) : null}
                 </>
               ) : profileImageUrl ? (
-                <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(profileImageUrl, { width: 224, height: 224 })}
+                  alt=""
+                  width={112}
+                  height={112}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="flex h-full w-full items-center justify-center text-3xl font-bold text-emerald-900">
                   {headline.slice(0, 1).toUpperCase()}

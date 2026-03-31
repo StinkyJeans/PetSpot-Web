@@ -1,3 +1,5 @@
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
+
 function formatDate(dateString) {
   if (!dateString) return "";
   return new Date(dateString).toLocaleString();
@@ -32,14 +34,24 @@ export default function PostList({ posts }) {
           <p className="text-sm text-zinc-800">{post.caption}</p>
           {post.media_kind === "video" && post.media_url ? (
             <div className="mt-4 w-full overflow-hidden rounded-xl border border-zinc-200">
-              <video src={post.media_url} controls className="h-auto max-h-[420px] w-full" />
+              <video
+                src={post.media_url}
+                controls
+                preload="none"
+                width={755}
+                height={425}
+                className="h-auto max-h-[420px] w-full"
+              />
             </div>
           ) : null}
           {(post.media_kind === "image" && post.media_url) || post.image_url ? (
             <div className="mt-4 h-72 w-full overflow-hidden rounded-xl border border-zinc-200">
               <img
-                src={post.media_url || post.image_url}
+                src={getOptimizedImageUrl(post.media_url || post.image_url, { width: 800 })}
                 alt="Post image"
+                width={755}
+                height={425}
+                loading="lazy"
                 className="h-full w-full object-cover"
               />
             </div>

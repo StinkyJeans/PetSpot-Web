@@ -7,6 +7,7 @@ import {
   SkeletonPostCard,
   SkeletonSidebarColumn,
 } from "@/components/ui/app-loading-shell";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { useFeedRouteSnapshot } from "@/lib/navigation/use-route-snapshot";
 
 export default function CachedFeedLoading() {
@@ -34,7 +35,14 @@ export default function CachedFeedLoading() {
                   </p>
                   {post.mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.mediaUrl} alt="" className="mt-3 h-56 w-full rounded-2xl object-cover" />
+                    <img
+                      src={getOptimizedImageUrl(post.mediaUrl, { width: 800 })}
+                      alt=""
+                      width={755}
+                      height={425}
+                      loading="lazy"
+                      className="mt-3 h-56 w-full rounded-2xl object-cover"
+                    />
                   ) : null}
                 </article>
               ))}

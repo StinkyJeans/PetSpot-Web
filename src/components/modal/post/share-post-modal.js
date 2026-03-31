@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 
 /** Portal shell (no hooks) so caption state unmounts when the modal closes. */
 export default function SharePostModal({
@@ -56,10 +57,24 @@ function SharePostModalContent({ post, onClose, onSubmit, submitting }) {
 
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
           {previewKind === "video" && previewMedia ? (
-            <video src={previewMedia} controls className="max-h-[260px] w-full rounded-xl object-cover" />
+            <video
+              src={previewMedia}
+              controls
+              preload="none"
+              width={755}
+              height={425}
+              className="max-h-[260px] w-full rounded-xl object-cover"
+            />
           ) : null}
           {(previewKind === "image" || !previewKind) && previewMedia ? (
-            <img src={previewMedia} alt="" className="max-h-[260px] w-full rounded-xl object-cover" />
+            <img
+              src={getOptimizedImageUrl(previewMedia, { width: 800 })}
+              alt=""
+              width={755}
+              height={425}
+              loading="lazy"
+              className="max-h-[260px] w-full rounded-xl object-cover"
+            />
           ) : null}
           {previewCaption ? <p className="mt-2 line-clamp-3 text-xs text-zinc-700">{previewCaption}</p> : null}
         </div>

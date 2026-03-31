@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/feedback/toast-provider";
+import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { ChatBubble, Heart, ShareIos } from "griddy-icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useLiveRelativeTime } from "@/lib/time/live-relative-time";
@@ -243,8 +244,11 @@ export default function StoryViewerModal({
               <div className="absolute inset-0 opacity-70">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={prevGroup.stories?.[prevGroup.stories.length - 1]?.mediaUrl}
+                  src={getOptimizedImageUrl(prevGroup.stories?.[prevGroup.stories.length - 1]?.mediaUrl, { width: 440, height: 1240 })}
                   alt=""
+                  width={220}
+                  height={620}
+                  loading="lazy"
                   className="h-full w-full object-cover blur-[1px]"
                 />
               </div>
@@ -253,7 +257,14 @@ export default function StoryViewerModal({
                 <span className="h-7 w-7 overflow-hidden rounded-full border border-white/30 bg-black/20">
                   {prevGroup.authorAvatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={prevGroup.authorAvatarUrl} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={getOptimizedImageUrl(prevGroup.authorAvatarUrl, { width: 56, height: 56 })}
+                      alt=""
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
                   ) : null}
                 </span>
                 <span className="truncate text-xs font-semibold">{prevGroup.authorHeadline}</span>
@@ -293,8 +304,11 @@ export default function StoryViewerModal({
               <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-black/30">
                 {currentStory.authorAvatarUrl ? (
                   <img
-                    src={currentStory.authorAvatarUrl}
+                    src={getOptimizedImageUrl(currentStory.authorAvatarUrl, { width: 64, height: 64 })}
                     alt=""
+                    width={32}
+                    height={32}
+                    loading="lazy"
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -368,6 +382,9 @@ export default function StoryViewerModal({
               <video
                 ref={videoRef}
                 src={currentStory.mediaUrl}
+                preload="none"
+                width={755}
+                height={425}
                 className={`h-full w-full object-contain transition-all duration-200 ${
                   uploadComplete === false ? "blur-sm scale-105" : ""
                 }`}
@@ -378,8 +395,11 @@ export default function StoryViewerModal({
               />
             ) : (
               <img
-                src={currentStory.mediaUrl}
+                src={getOptimizedImageUrl(currentStory.mediaUrl, { width: 1100, height: 1956 })}
                 alt=""
+                width={550}
+                height={978}
+                loading="eager"
                 className={`h-full w-full object-contain transition-all duration-200 ${
                   uploadComplete === false ? "blur-sm scale-105" : ""
                 }`}
@@ -398,8 +418,11 @@ export default function StoryViewerModal({
               {currentStory.authorAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={currentStory.authorAvatarUrl}
+                  src={getOptimizedImageUrl(currentStory.authorAvatarUrl, { width: 72, height: 72 })}
                   alt=""
+                  width={36}
+                  height={36}
+                  loading="lazy"
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -450,14 +473,28 @@ export default function StoryViewerModal({
               >
                 <div className="absolute inset-0 opacity-80">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={thumb} alt="" className="h-full w-full object-cover blur-[1px]" />
+                  <img
+                    src={getOptimizedImageUrl(thumb, { width: 520, height: 660 })}
+                    alt=""
+                    width={260}
+                    height={330}
+                    loading="lazy"
+                    className="h-full w-full object-cover blur-[1px]"
+                  />
                 </div>
                 <div className="absolute inset-0 bg-black/45" />
                 <div className="absolute left-3 top-3 flex items-center gap-2 text-white">
                   <span className="h-7 w-7 overflow-hidden rounded-full border border-white/30 bg-black/20">
                     {g.authorAvatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={g.authorAvatarUrl} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={getOptimizedImageUrl(g.authorAvatarUrl, { width: 56, height: 56 })}
+                        alt=""
+                        width={28}
+                        height={28}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
                     ) : null}
                   </span>
                   <span className="truncate text-xs font-semibold">{g.authorHeadline}</span>
