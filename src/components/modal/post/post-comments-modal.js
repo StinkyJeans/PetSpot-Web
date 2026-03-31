@@ -244,10 +244,18 @@ function PostCommentsModalInner({
   const sourcePost = normalizedSharedPost ?? post;
   const mediaSrc = sourcePost.media_url || sourcePost.image_url;
   const mediaKind = sourcePost.media_kind || "";
+  const mediaPosterSrc =
+    mediaKind === "video" && sourcePost.image_url
+      ? getOptimizedImageUrl(sourcePost.image_url, { width: 800 })
+      : "";
   const sharedMediaSrc = normalizedSharedPost
     ? normalizedSharedPost.media_url || normalizedSharedPost.image_url || ""
     : "";
   const sharedMediaKind = normalizedSharedPost?.media_kind || "";
+  const sharedMediaPosterSrc =
+    sharedMediaKind === "video" && normalizedSharedPost?.image_url
+      ? getOptimizedImageUrl(normalizedSharedPost.image_url, { width: 800 })
+      : "";
   const petName = post.pet_profiles?.pet_name || "Pet";
   const ownerName = post.pet_profiles?.owner_display_name || "";
   const authorAvatar = post.pet_profiles?.profile_image_url || "";
@@ -358,7 +366,8 @@ function PostCommentsModalInner({
                   <video
                     src={sharedMediaSrc}
                     controls
-                    preload="none"
+                    preload="metadata"
+                    poster={sharedMediaPosterSrc || undefined}
                     width={755}
                     height={425}
                     className="max-h-[220px] w-full bg-zinc-900 object-contain"
@@ -409,7 +418,8 @@ function PostCommentsModalInner({
                 <video
                   src={mediaSrc}
                   controls
-                  preload="none"
+                  preload="metadata"
+                  poster={mediaPosterSrc || undefined}
                   width={755}
                   height={425}
                   className="max-h-[240px] w-full rounded-xl object-cover"

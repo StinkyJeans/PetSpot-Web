@@ -26,11 +26,20 @@ export async function loadFeedData(userId) {
     .limit(1)
     .maybeSingle();
 
+  const FEED_INITIAL_POST_LIMIT = 12;
   let posts = null;
-  const withShared = await supabase.from("posts").select(sharedSelect).order("created_at", { ascending: false }).limit(20);
+  const withShared = await supabase
+    .from("posts")
+    .select(sharedSelect)
+    .order("created_at", { ascending: false })
+    .limit(FEED_INITIAL_POST_LIMIT);
 
   if (withShared.error) {
-    const fallback = await supabase.from("posts").select(baseSelect).order("created_at", { ascending: false }).limit(20);
+    const fallback = await supabase
+      .from("posts")
+      .select(baseSelect)
+      .order("created_at", { ascending: false })
+      .limit(FEED_INITIAL_POST_LIMIT);
     posts = await enrichPostsWithShared(supabase, fallback.data ?? []);
   } else {
     posts = await enrichPostsWithShared(supabase, withShared.data ?? []);
@@ -39,7 +48,12 @@ export async function loadFeedData(userId) {
   const postRows = posts ?? [];
   const postIds = postRows.map((p) => p.id);
   const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, userId);
-  const { myEvents, otherEvents, followedEvents } = await getEventSectionsForUserId(supabase, userId);
+  const { myEvents, otherEvents, followedEvents } = await getEventSectionsForUserId(supabase, userId, {
+    maxRows: 30,
+    myEventsLimit: 12,
+    otherEventsLimit: 8,
+    followedEventsLimit: 8,
+  });
 
   if (process.env.NODE_ENV === "development") {
     const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();

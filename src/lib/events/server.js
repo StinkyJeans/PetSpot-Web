@@ -24,13 +24,17 @@ export async function getNextEventForUserId(supabase, userId) {
   };
 }
 
-export async function getEventSectionsForUserId(supabase, userId) {
+export async function getEventSectionsForUserId(
+  supabase,
+  userId,
+  { maxRows = 36, myEventsLimit = 16, otherEventsLimit = 12, followedEventsLimit = 12 } = {},
+) {
   const { data: rows, error } = await supabase
     .from("events")
     .select("id, owner_id, event_date, event_time, city, country, event_type, purpose")
     .order("event_date", { ascending: true })
     .order("event_time", { ascending: true })
-    .limit(60);
+    .limit(maxRows);
 
   if (error || !rows?.length) {
     return { myEvents: [], otherEvents: [], followedEvents: [] };
@@ -78,11 +82,13 @@ export async function getEventSectionsForUserId(supabase, userId) {
     isInterested: followedIdSet.has(r.id),
   }));
 
-  const myEvents = mapped.filter((e) => e.ownerId === userId).slice(0, 30);
+  const myEvents = mapped.filter((e) => e.ownerId === userId).slice(0, myEventsLimit);
   // Other people's events excludes already-followed/interested events.
-  const otherEvents = mapped.filter((e) => e.ownerId !== userId && !e.isInterested).slice(0, 20);
+  const otherEvents = mapped
+    .filter((e) => e.ownerId !== userId && !e.isInterested)
+    .slice(0, otherEventsLimit);
 
-  const followedEvents = mapped.filter((e) => e.isInterested).slice(0, 20);
+  const followedEvents = mapped.filter((e) => e.isInterested).slice(0, followedEventsLimit);
 
   return { myEvents, otherEvents, followedEvents };
 }

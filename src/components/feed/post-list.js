@@ -37,7 +37,7 @@ export default function PostList({ posts }) {
               <video
                 src={post.media_url}
                 controls
-                preload="none"
+                preload="metadata"
                 width={755}
                 height={425}
                 className="h-auto max-h-[420px] w-full"

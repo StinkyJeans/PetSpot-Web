@@ -4,6 +4,7 @@ import Link from "next/link";
 import { logout } from "@/app/auth/actions";
 import EventSection from "@/components/event/event-section";
 import { getOptimizedImageUrl } from "@/lib/imageUrl";
+import { requestRoutePrefetch } from "@/lib/navigation/prefetch";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Calendar, PhotoCamera, Plus, TrendUp, User, UsersGroup } from "griddy-icons";
 
@@ -68,7 +69,8 @@ export default function FeedLeftSidebar({
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    onMouseEnter={() => router.prefetch(item.href)}
+                    onMouseEnter={() => requestRoutePrefetch(router, item.href)}
+                    onFocus={() => requestRoutePrefetch(router, item.href)}
                     className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
                       item.id === active
                         ? "bg-emerald-100/80 text-emerald-950"
@@ -88,7 +90,8 @@ export default function FeedLeftSidebar({
           <div className="space-y-2">
             <Link
               href="/feed#create"
-              onMouseEnter={() => router.prefetch("/feed")}
+              onMouseEnter={() => requestRoutePrefetch(router, "/feed")}
+              onFocus={() => requestRoutePrefetch(router, "/feed")}
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-950"
             >
               <Plus size={18} color="#fff" />

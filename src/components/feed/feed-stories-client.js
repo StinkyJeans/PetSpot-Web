@@ -90,16 +90,16 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
       <div className="flex gap-4 overflow-x-auto pb-1">
         <button
           type="button"
-          className="flex shrink-0 flex-col items-center gap-2 text-center"
+          className="group flex h-24 w-20 shrink-0 cursor-pointer flex-col items-center justify-center px-1.5 py-1 text-center transition-transform duration-150 hover:-translate-y-0.5"
           aria-label="Add story"
           onClick={() => {
             setUploadOpen(true);
           }}
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-800">
-            <Plus size={28} />
+          <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-900 transition-all duration-150 group-hover:bg-emerald-100">
+            <Plus size={24} color="currentColor" />
           </span>
-          <span className="max-w-[72px] truncate text-xs font-medium text-zinc-700">
+          <span className="mt-2 max-w-[72px] truncate text-[12px] font-semibold text-emerald-900">
             Add Story
           </span>
         </button>
@@ -113,12 +113,12 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
             <button
               key={group.ownerId}
               type="button"
-              className="flex shrink-0 flex-col items-center gap-2 text-center"
+              className="flex shrink-0 cursor-pointer flex-col items-center gap-2 rounded-2xl px-1.5 py-1 text-center transition-transform duration-150 hover:-translate-y-0.5"
               aria-label={`Open stories from ${group.authorHeadline}`}
               onClick={() => setSelectedOwnerId(group.ownerId)}
             >
               <span
-                className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${ringClass}`}
+                className={`flex h-16 w-16 items-center justify-center rounded-full border-2 transition-all duration-150 hover:shadow-sm ${ringClass}`}
               >
                 {group.authorAvatarUrl ? (
                   <img
@@ -179,7 +179,7 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*,video/*"
-                className="block w-full text-sm text-zinc-700"
+                className="hidden"
                 onChange={(e) => {
                   const f = e.currentTarget.files?.[0] ?? null;
                   setUploadError("");
@@ -191,6 +191,20 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                 }}
               />
 
+              {!selectedPreviewUrl ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group flex h-44 w-full cursor-pointer flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-950 to-emerald-900 text-white transition-colors hover:from-emerald-900 hover:to-emerald-800"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-emerald-200/80 bg-white/10 transition-all group-hover:bg-white/20">
+                    <Plus size={28} color="currentColor" />
+                  </span>
+                  <span className="mt-3 text-sm font-semibold">Choose photo or video</span>
+                  <span className="mt-1 text-xs text-emerald-100/90">Upload to your story</span>
+                </button>
+              ) : null}
+
               {uploadError ? (
                 <p className="mt-3 text-sm font-semibold text-red-600">{uploadError}</p>
               ) : null}
@@ -201,7 +215,7 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                     <video
                       src={selectedPreviewUrl}
                       controls
-                      preload="none"
+                      preload="metadata"
                       width={755}
                       height={425}
                       className="max-h-[52vh] w-full object-contain"
@@ -218,6 +232,16 @@ export default function FeedStoriesClient({ viewerUserId, initialStories }) {
                     />
                   )}
                 </div>
+              ) : null}
+
+              {selectedPreviewUrl ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-3 cursor-pointer rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100"
+                >
+                  Change media
+                </button>
               ) : null}
 
               <button

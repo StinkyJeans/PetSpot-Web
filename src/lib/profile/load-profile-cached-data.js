@@ -53,13 +53,14 @@ export async function loadProfileDataForUser(profileUserId, viewerUserId) {
     isFollowing = Boolean(followRow);
   }
 
+  const PROFILE_INITIAL_POST_LIMIT = 40;
   let posts = null;
   const withShared = await supabase
     .from("posts")
     .select(profilePostsSelect)
     .eq("owner_id", profileUserId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(PROFILE_INITIAL_POST_LIMIT);
 
   if (withShared.error) {
     const fallback = await supabase
@@ -67,7 +68,7 @@ export async function loadProfileDataForUser(profileUserId, viewerUserId) {
       .select(profilePostsBaseSelect)
       .eq("owner_id", profileUserId)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(PROFILE_INITIAL_POST_LIMIT);
     posts = await enrichPostsWithShared(supabase, fallback.data ?? []);
   } else {
     posts = await enrichPostsWithShared(supabase, withShared.data ?? []);
@@ -76,7 +77,16 @@ export async function loadProfileDataForUser(profileUserId, viewerUserId) {
   const postRows = posts ?? [];
   const postIds = postRows.map((p) => p.id);
   const { counts, liked, shared } = await aggregatePostEngagement(supabase, postIds, viewerUserId);
-  const { myEvents, otherEvents, followedEvents } = await getEventSectionsForUserId(supabase, profileUserId);
+  const { myEvents, otherEvents, followedEvents } = await getEventSectionsForUserId(
+    supabase,
+    profileUserId,
+    {
+      maxRows: 30,
+      myEventsLimit: 12,
+      otherEventsLimit: 8,
+      followedEventsLimit: 8,
+    },
+  );
 
   if (process.env.NODE_ENV === "development") {
     const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();

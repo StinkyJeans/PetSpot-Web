@@ -300,3 +300,21 @@ const nextConfig = {
 For each fix, open the relevant file in Cursor and use a prompt like:
 
 > "Apply Fix 1 from my performance doc. Create `src/lib/imageUrl.js` with the `getOptimizedImageUrl` helper, then find every place in this file where a Supabase image URL is used and wrap it with the helper using the correct display dimensions."
+
+---
+
+## Repeat Navigation Checklist (for new pages)
+
+Use this checklist before shipping any new route:
+
+- Add `RouteSnapshotWriter` in the route page and keep snapshot payload minimal (title, avatar, first items only).
+- Read snapshots with `useRouteSnapshot(routeKey)` only (TTL-protected stale-while-revalidate behavior).
+- Keep first payload small:
+  - feed-style pages: ~12 initial cards
+  - profile-style pages: ~40 initial posts max
+  - events sections: keep list limits low for first paint.
+- Use intent-based prefetch only (hover/focus) and guard with connection checks (`saveData`, slow networks).
+- Media policy:
+  - images: use `getOptimizedImageUrl()` (feature-flagged)
+  - first visible media can be eager; below-the-fold media stays lazy
+  - videos use `preload="metadata"` and set `poster` when an image URL exists.

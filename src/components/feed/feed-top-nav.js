@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search } from "griddy-icons";
 import FeedNotificationsDropdown from "@/components/feed/feed-notifications-dropdown";
+import { requestRoutePrefetch } from "@/lib/navigation/prefetch";
 
 const navInactive = "border-b-2 border-transparent pb-0.5 text-sm font-medium text-zinc-600 hover:text-emerald-900";
 const navActive =
@@ -23,7 +24,7 @@ export default function FeedTopNav({ active }) {
   const current = active ?? getActiveNav(pathname);
 
   function prefetch(href) {
-    router.prefetch(href);
+    requestRoutePrefetch(router, href);
   }
 
   return (

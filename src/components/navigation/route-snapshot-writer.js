@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { routeSnapshotStorageKey } from "@/lib/navigation/route-snapshot";
+import { routeSnapshotStorageKey, withSnapshotMetadata } from "@/lib/navigation/route-snapshot";
 
 /**
  * Persists a JSON snapshot for `loading.js` to read (sessionStorage).
@@ -12,7 +12,9 @@ export default function RouteSnapshotWriter({ routeKey, snapshot }) {
   useEffect(() => {
     if (snapshot == null) return;
     try {
-      sessionStorage.setItem(routeSnapshotStorageKey(routeKey), JSON.stringify(snapshot));
+      const payload = withSnapshotMetadata(snapshot);
+      if (!payload) return;
+      sessionStorage.setItem(routeSnapshotStorageKey(routeKey), JSON.stringify(payload));
     } catch {
       // Ignore storage write errors.
     }

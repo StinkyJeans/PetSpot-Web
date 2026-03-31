@@ -382,7 +382,7 @@ export default function StoryViewerModal({
               <video
                 ref={videoRef}
                 src={currentStory.mediaUrl}
-                preload="none"
+                preload="metadata"
                 width={755}
                 height={425}
                 className={`h-full w-full object-contain transition-all duration-200 ${

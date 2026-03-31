@@ -60,7 +60,7 @@ function SharePostModalContent({ post, onClose, onSubmit, submitting }) {
             <video
               src={previewMedia}
               controls
-              preload="none"
+              preload="metadata"
               width={755}
               height={425}
               className="max-h-[260px] w-full rounded-xl object-cover"

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LEGACY_FEED_SNAPSHOT_KEY, routeSnapshotStorageKey } from "@/lib/navigation/route-snapshot";
+import {
+  LEGACY_FEED_SNAPSHOT_KEY,
+  parseRouteSnapshot,
+  routeSnapshotStorageKey,
+} from "@/lib/navigation/route-snapshot";
 
 /**
  * @param {string} routeKey — pathname segment, e.g. "/feed" or "/market"
@@ -17,7 +21,8 @@ export function useRouteSnapshot(routeKey, options = {}) {
       let raw = sessionStorage.getItem(key);
       if (!raw && legacyKey) raw = sessionStorage.getItem(legacyKey);
       if (!raw) return;
-      const parsed = JSON.parse(raw);
+      const parsed = parseRouteSnapshot(raw);
+      if (!parsed) return;
       queueMicrotask(() => setSnapshot(parsed));
     } catch {
       // Ignore cache read errors.

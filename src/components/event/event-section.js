@@ -5,6 +5,7 @@ import { createEvent, setEventInterested, updateEvent } from "@/app/events/actio
 import EventModal from "@/components/modal/event/eventModal";
 import ViewAllEvent from "@/components/modal/event/viewAllEvent";
 import { useToast } from "@/components/feedback/toast-provider";
+import { Edit, Plus } from "griddy-icons";
 
 function eventsIdentityKey(events) {
   return (events ?? [])
@@ -27,9 +28,11 @@ function EventCard({ item, showAuthor = false, onEdit, actionButton }) {
           <button
             type="button"
             onClick={() => onEdit(item)}
-            className="text-[11px] font-semibold text-emerald-800 hover:underline"
+            className="cursor-pointer text-emerald-800 hover:text-emerald-950"
+            aria-label="Edit event"
+            title="Edit event"
           >
-            Edit
+            <Edit size={14} />
           </button>
         ) : actionButton ? (
           actionButton
@@ -101,9 +104,11 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
         <button
           type="button"
           onClick={() => setIsEventModalOpen(true)}
-          className="rounded-full bg-emerald-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-950"
+          className="inline-flex cursor-pointer items-center justify-center rounded-full bg-emerald-900 p-2 text-white hover:bg-emerald-950"
+          aria-label="Create your own event"
+          title="Create your own event"
         >
-          Create your own event
+          <Plus size={16} color="#fff" />
         </button>
       </div>
 
@@ -118,7 +123,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                 <button
                   type="button"
                   onClick={() => setIsViewAllOpen(true)}
-                  className="text-[11px] font-semibold text-emerald-800 hover:underline"
+                  className="cursor-pointer text-[11px] font-semibold text-emerald-800 hover:underline"
                 >
                   Show all
                 </button>
@@ -146,7 +151,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                   type="button"
                   disabled={myEventsPage <= 0}
                   onClick={() => setMyEventsPage((p) => Math.max(0, p - 1))}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
+                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -157,7 +162,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                   type="button"
                   disabled={myEventsPage >= maxPage}
                   onClick={() => setMyEventsPage((p) => Math.min(maxPage, p + 1))}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
+                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -199,7 +204,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                         type="button"
                         onClick={() => onInterested(item)}
                         disabled={interestedPendingId === item.id}
-                        className="rounded-full bg-emerald-900 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-950 disabled:opacity-60"
+                        className="cursor-pointer rounded-full bg-emerald-900 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-950 disabled:opacity-60"
                       >
                         {interestedPendingId === item.id ? "Saving…" : "Interested"}
                       </button>
@@ -217,7 +222,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                   type="button"
                   disabled={otherEventsPage <= 0}
                   onClick={() => setOtherEventsPage((p) => Math.max(0, p - 1))}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
+                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -228,7 +233,7 @@ function EventSectionBody({ myEvents = [], otherEvents = [], followedEvents = []
                   type="button"
                   disabled={otherEventsPage >= maxOtherPage}
                   onClick={() => setOtherEventsPage((p) => Math.min(maxOtherPage, p + 1))}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
+                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-emerald-100/30 disabled:opacity-50"
                 >
                   Next
                 </button>

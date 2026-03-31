@@ -112,7 +112,7 @@ export default function ProfileGallery({
               {item.kind === "video" ? (
                 <video
                   src={item.url}
-                  preload="none"
+                  preload="metadata"
                   width={360}
                   height={360}
                   className="h-full w-full object-cover"

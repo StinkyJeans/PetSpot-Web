@@ -6,6 +6,8 @@
 
 export const ROUTE_SNAPSHOT_VERSION = "v1";
 const PREFIX = `petspot:route:snapshot:${ROUTE_SNAPSHOT_VERSION}:`;
+const TS_KEY = "__savedAt";
+export const ROUTE_SNAPSHOT_TTL_MS = 5 * 60 * 1000;
 
 /** @deprecated Use routeSnapshotStorageKey("/feed") — migration from older builds. */
 export const LEGACY_FEED_SNAPSHOT_KEY = "petspot:feed:snapshot:v1";
@@ -20,6 +22,34 @@ export function normalizePathname(pathname) {
 /** Storage key for a route segment (pathname only; no query). */
 export function routeSnapshotStorageKey(pathname) {
   return `${PREFIX}${normalizePathname(pathname)}`;
+}
+
+function isValidObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+export function withSnapshotMetadata(snapshot) {
+  if (!isValidObject(snapshot)) return null;
+  return { ...snapshot, [TS_KEY]: Date.now() };
+}
+
+export function isSnapshotFresh(snapshot, ttlMs = ROUTE_SNAPSHOT_TTL_MS) {
+  if (!isValidObject(snapshot)) return false;
+  const savedAt = Number(snapshot[TS_KEY] ?? 0);
+  if (!Number.isFinite(savedAt) || savedAt <= 0) return false;
+  return Date.now() - savedAt <= ttlMs;
+}
+
+export function parseRouteSnapshot(raw, ttlMs = ROUTE_SNAPSHOT_TTL_MS) {
+  if (!raw) return null;
+  let parsed = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!isSnapshotFresh(parsed, ttlMs)) return null;
+  return parsed;
 }
 
 /**

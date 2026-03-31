@@ -61,7 +61,7 @@ export default async function FeedPage() {
               No posts yet. Create your first post above.
             </p>
           ) : (
-            postRows.map((post) => {
+            postRows.map((post, index) => {
               const c = counts[post.id] ?? { likes: 0, comments: 0, shares: 0 };
               return (
                 <PostCard
@@ -75,6 +75,7 @@ export default async function FeedPage() {
                   viewerPetAvatarUrl={viewerAvatar}
                   viewerUserId={user.id}
                   viewerCommentLabel={sidebarProfileName}
+                  priorityMedia={index === 0}
                 />
               );
             })

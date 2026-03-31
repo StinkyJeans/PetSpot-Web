@@ -37,6 +37,7 @@ export default function PostCard({
   viewerPetAvatarUrl,
   viewerUserId,
   viewerCommentLabel = "",
+  priorityMedia = false,
 }) {
   const router = useRouter();
   const menuRef = useRef(null);
@@ -132,10 +133,18 @@ export default function PostCard({
   const sourcePost = normalizedSharedPost ?? post;
   const mediaSrc = sourcePost.media_url || sourcePost.image_url;
   const mediaKind = sourcePost.media_kind || "";
+  const mediaPosterSrc =
+    mediaKind === "video" && sourcePost.image_url
+      ? getOptimizedImageUrl(sourcePost.image_url, { width: 800 })
+      : "";
   const sharedMediaSrc = normalizedSharedPost
     ? normalizedSharedPost.media_url || normalizedSharedPost.image_url || ""
     : "";
   const sharedMediaKind = normalizedSharedPost?.media_kind || "";
+  const sharedMediaPosterSrc =
+    sharedMediaKind === "video" && normalizedSharedPost?.image_url
+      ? getOptimizedImageUrl(normalizedSharedPost.image_url, { width: 800 })
+      : "";
   const petName = post.pet_profiles?.pet_name || "Pet";
   const ownerName = post.pet_profiles?.owner_display_name || "";
   const headline = formatProfileHeadline(ownerName, petName);
@@ -214,9 +223,9 @@ export default function PostCard({
       <header className="flex items-start justify-between gap-3 p-4 pb-2">
         <Link
           href={`/profile/${post.owner_id}`}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg outline-none ring-emerald-800/30 hover:bg-emerald-50/80 focus-visible:ring-2"
+          className="group inline-flex min-w-0 items-center gap-3 rounded-lg outline-none ring-emerald-800/30 focus-visible:ring-2"
         >
-          <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
+          <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50 transition-colors duration-150 group-hover:border-emerald-300">
             {authorAvatar ? (
               <img
                 src={authorAvatarOptimized}
@@ -305,7 +314,8 @@ export default function PostCard({
             <video
               src={sharedMediaSrc}
               controls
-              preload="none"
+              preload="metadata"
+              poster={sharedMediaPosterSrc || undefined}
               width={755}
               height={425}
               className="max-h-[min(420px,70vh)] w-full bg-zinc-900 object-contain"
@@ -317,7 +327,7 @@ export default function PostCard({
               alt=""
               width={755}
               height={425}
-              loading="lazy"
+              loading={priorityMedia ? "eager" : "lazy"}
               className="max-h-[min(420px,70vh)] w-full bg-zinc-100 object-cover"
             />
           ) : null}
@@ -359,7 +369,8 @@ export default function PostCard({
           <video
             src={mediaSrc}
             controls
-            preload="none"
+            preload="metadata"
+            poster={mediaPosterSrc || undefined}
             width={755}
             height={425}
             className="max-h-[420px] w-full rounded-2xl object-cover"
@@ -374,7 +385,7 @@ export default function PostCard({
               alt=""
               width={755}
               height={566}
-              loading="lazy"
+              loading={priorityMedia ? "eager" : "lazy"}
               className="h-full w-full object-cover"
             />
           </div>
@@ -387,7 +398,7 @@ export default function PostCard({
             <input type="hidden" name="postId" value={post.id} />
             <button
               type="submit"
-              className="flex items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900"
+              className="flex cursor-pointer items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900"
             >
               <Heart size={20} color={liveLiked ? "#ef4444" : "#374151"} filled={liveLiked} />
               <span>{formatCount(liveLikeCount)}</span>
@@ -396,7 +407,7 @@ export default function PostCard({
           <button
             type="button"
             onClick={() => setCommentsModalOpen(true)}
-            className="flex items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900"
+            className="flex cursor-pointer items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900"
             aria-expanded={commentsModalOpen}
             aria-haspopup="dialog"
           >
@@ -407,7 +418,7 @@ export default function PostCard({
             type="button"
             onClick={() => setShareModalOpen(true)}
             disabled={sharePending}
-            className="flex items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900 disabled:opacity-50"
+            className="flex cursor-pointer items-center gap-1.5 text-sm text-zinc-700 hover:text-emerald-900 disabled:opacity-50"
             aria-label="Share post"
           >
             <ShareIos size={20} color={liveShared ? "#059669" : "#374151"} />
