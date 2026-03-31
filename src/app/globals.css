@@ -52,3 +52,14 @@ button:disabled,
   background-size: 220% 100%;
   animation: petspot-skeleton-shimmer 1.45s ease-in-out infinite;
 }
+
+/* Keep scroll behavior but hide visible scrollbar track/thumb. */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

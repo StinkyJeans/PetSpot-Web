@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toggleFollowUser } from "@/app/profile/follow-actions";
@@ -45,14 +46,12 @@ export default function ProfileFollowRow({ targetUserId, isFollowing }) {
           {pending ? "…" : isFollowing ? "+ Followed" : "+ Follow"}
         </button>
       </form>
-      <button
-        type="button"
-        disabled
-        title="Coming soon"
-        className="inline-flex cursor-not-allowed items-center justify-center rounded-full border border-zinc-200 bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-400"
+      <Link
+        href={`/messages?user=${targetUserId}`}
+        className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
       >
         Message
-      </button>
+      </Link>
     </div>
   );
 }

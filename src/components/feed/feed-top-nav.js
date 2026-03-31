@@ -11,6 +11,7 @@ const navActive =
   "border-b-2 border-emerald-800 pb-0.5 text-sm font-semibold text-emerald-900";
 
 function getActiveNav(pathname) {
+  if (pathname.startsWith("/messages")) return "messages";
   if (pathname.startsWith("/market")) return "market";
   if (pathname.startsWith("/adopt")) return "adopt";
   if (pathname.startsWith("/community")) return "community";
@@ -75,6 +76,13 @@ export default function FeedTopNav({ active }) {
               onMouseEnter={() => prefetch("/community")}
             >
               Community
+            </Link>
+            <Link
+              href="/messages"
+              className={current === "messages" ? navActive : navInactive}
+              onMouseEnter={() => prefetch("/messages")}
+            >
+              Messages
             </Link>
           </nav>
           <FeedNotificationsDropdown />

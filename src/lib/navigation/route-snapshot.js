@@ -59,6 +59,7 @@ export function parseRouteSnapshot(raw, ttlMs = ROUTE_SNAPSHOT_TTL_MS) {
 export const APP_SHELL_PREFETCH_ROUTES = [
   "/feed",
   "/profile",
+  "/messages",
   "/community",
   "/market",
   "/adopt",

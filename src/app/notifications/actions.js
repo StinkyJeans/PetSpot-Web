@@ -6,7 +6,7 @@ import { formatProfileHeadline } from "@/lib/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 const NOTIFICATION_SELECT =
-  "id, type, actor_id, post_id, comment_id, parent_comment_id, event_id, event_title, event_when, event_place, read_at, created_at";
+  "id, type, actor_id, post_id, comment_id, parent_comment_id, event_id, event_title, event_when, event_place, conversation_id, message_id, read_at, created_at";
 
 /**
  * @returns {Promise<Array<{
@@ -20,6 +20,8 @@ const NOTIFICATION_SELECT =
  *   eventTitle: string,
  *   eventWhen: string,
  *   eventPlace: string,
+ *   conversationId: string | null,
+ *   messageId: string | null,
  *   readAt: string | null,
  *   createdAt: string,
  *   isFollowBack: boolean,
@@ -83,6 +85,8 @@ export async function fetchNotifications({ limit = 40 } = {}) {
       eventTitle: r.event_title ?? "",
       eventWhen: r.event_when ?? "",
       eventPlace: r.event_place ?? "",
+      conversationId: r.conversation_id,
+      messageId: r.message_id,
       readAt: r.read_at,
       createdAt: r.created_at,
       isFollowBack: r.type === "follow" && followBackSet.has(r.actor_id),

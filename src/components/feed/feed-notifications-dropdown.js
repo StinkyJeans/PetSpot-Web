@@ -17,6 +17,8 @@ function labelForType(type, isFollowBack = false, eventTitle = "", eventWhen = "
       return isFollowBack ? "followed you back" : "just followed you. Follow back?";
     case "event_interested":
       return `followed your ${eventTitle} (${eventWhen}, ${eventPlace})`;
+    case "message":
+      return "sent you a message";
     case "post_like":
       return "liked your post";
     case "post_comment":
@@ -166,6 +168,8 @@ export default function FeedNotificationsDropdown() {
                       href={
                         n.type === "follow" && n.actorId
                           ? `/profile/${n.actorId}`
+                          : n.type === "message" && n.conversationId
+                            ? `/messages?conversation=${n.conversationId}`
                           : n.type === "event_interested"
                             ? "/feed#event-followed"
                             : n.postId
