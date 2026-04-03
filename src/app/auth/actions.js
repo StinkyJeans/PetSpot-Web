@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
 function normalizeError(error, fallbackMessage) {
   if (error?.message) {
@@ -10,6 +11,42 @@ function normalizeError(error, fallbackMessage) {
   }
 
   return fallbackMessage;
+}
+
+/** Server actions must return plain JSON; coerce DB timestamps to ISO strings. */
+function toPasswordHintIso(value) {
+  if (value == null || value === "") return null;
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return Number.isFinite(d.getTime()) ? d.toISOString() : null;
+  }
+  if (typeof value === "number") {
+    const d = new Date(value);
+    return Number.isFinite(d.getTime()) ? d.toISOString() : null;
+  }
+  if (value instanceof Date) return value.toISOString();
+  return null;
+}
+
+async function fetchPasswordChangeHintIso(supabase, email) {
+  const { data: rpcData, error: rpcError } = await supabase.rpc("password_change_hint_for_email", {
+    p_email: email,
+  });
+  if (!rpcError && rpcData != null) {
+    const raw = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    const iso = toPasswordHintIso(raw);
+    if (iso) return iso;
+  }
+
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) return null;
+  const { data: row, error } = await admin
+    .from("password_change_hints")
+    .select("password_changed_at")
+    .eq("email", email)
+    .maybeSingle();
+  if (error || row?.password_changed_at == null) return null;
+  return toPasswordHintIso(row.password_changed_at);
 }
 
 export async function signupWithPassword(_, formData) {
@@ -65,7 +102,14 @@ export async function loginWithPassword(_, formData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: normalizeError(error, "Invalid login credentials.") };
+    const hintIso = await fetchPasswordChangeHintIso(supabase, email);
+    const hasHint = Boolean(hintIso);
+    return {
+      error: hasHint
+        ? "That email or password didn’t work."
+        : normalizeError(error, "Invalid login credentials."),
+      passwordChangedAt: hintIso,
+    };
   }
 
   redirect("/feed");
@@ -99,6 +143,12 @@ export async function logout() {
   redirect("/login");
 }
 
+/**
+ * Password reset emails use Supabase Auth’s OTP / email-token lifetime (same family
+ * as magic links). Default is often 3600s (1 hour). To use 10 minutes, set OTP
+ * expiry to 600 seconds in the Supabase Dashboard (Authentication → search for
+ * OTP / mailer / expiry), or `[auth] otp_expiry = 600` in local `config.toml`.
+ */
 export async function requestPasswordReset(_, formData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
 
@@ -146,6 +196,23 @@ export async function updatePasswordAfterRecovery(_, formData) {
 
   if (error) {
     return { error: normalizeError(error, "Could not update password.") };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.id && user.email) {
+    const { error: hintError } = await supabase.from("password_change_hints").upsert(
+      {
+        user_id: user.id,
+        email: String(user.email).trim().toLowerCase(),
+        password_changed_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+    if (hintError) {
+      console.error("password_change_hints upsert failed:", hintError.message);
+    }
   }
 
   await supabase.auth.signOut();

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { loginWithPassword, signInWithGoogle } from "@/app/auth/actions";
+import LoginPasswordChangeHint from "@/components/auth/login-password-change-hint";
 import { ArrowRight, Email, Google, Password } from "griddy-icons";
 import { useToast } from "@/components/feedback/toast-provider";
 
-const initialState = { error: "" };
+const initialState = { error: "", passwordChangedAt: null };
 
 export default function LoginForm({ initialError, initialSuccess }) {
   const [state, loginAction, pending] = useActionState(
@@ -15,20 +16,12 @@ export default function LoginForm({ initialError, initialSuccess }) {
   );
   const error = state?.error || initialError;
   const { showToast } = useToast();
-  const lastToastErrorRef = useRef("");
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!initialSuccess) return;
     showToast(initialSuccess, "success");
   }, [initialSuccess, showToast]);
-
-  useEffect(() => {
-    if (!error) return;
-    if (lastToastErrorRef.current === error) return;
-    lastToastErrorRef.current = error;
-    showToast(error, "error");
-  }, [error, showToast]);
 
   return (
     <div className="relative z-10 w-full max-w-md rounded-[28px] border border-white/70 bg-white/95 p-8 shadow-2xl">
@@ -96,6 +89,14 @@ export default function LoginForm({ initialError, initialSuccess }) {
             Forgot password?
           </Link>
         </p>
+        {error ? (
+          <p className="text-sm font-medium text-red-700" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {state?.passwordChangedAt ? (
+          <LoginPasswordChangeHint iso={state.passwordChangedAt} />
+        ) : null}
         <button
           type="submit"
           disabled={pending}

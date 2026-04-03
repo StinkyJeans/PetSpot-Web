@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useState } from "react";
+import { formatSpokenTimeAgo } from "@/lib/time/spoken-time-ago";
 
 /**
  * @param {string | null | undefined} isoString
@@ -31,6 +32,8 @@ export function formatRelativeTimeAgo(isoString, nowMs = Date.now()) {
   const years = Math.floor(days / 365);
   return years === 1 ? "1 year ago" : `${years} years ago`;
 }
+
+export { formatSpokenTimeAgo };
 
 /**
  * Recomputes the label on a schedule that speeds up for newer posts (feels "live").
@@ -66,4 +69,37 @@ export function useLiveRelativeTime(isoString) {
   if (!isoString) return "";
   if (now === null) return "";
   return formatRelativeTimeAgo(isoString, now);
+}
+
+/** Same scheduling as useLiveRelativeTime but uses formatSpokenTimeAgo (for auth messages). */
+export function useSpokenTimeAgo(isoString) {
+  const [now, setNow] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!isoString) return undefined;
+
+    let timeoutId;
+    let cancelled = false;
+
+    function schedule() {
+      if (cancelled) return;
+      setNow(Date.now());
+      const then = new Date(isoString).getTime();
+      if (!Number.isFinite(then)) return;
+      const ageSec = (Date.now() - then) / 1000;
+      const delay =
+        ageSec < 120 ? 10_000 : ageSec < 3600 ? 30_000 : ageSec < 86_400 ? 60_000 : 300_000;
+      timeoutId = window.setTimeout(schedule, delay);
+    }
+
+    schedule();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isoString]);
+
+  if (!isoString) return "";
+  if (now === null) return "";
+  return formatSpokenTimeAgo(isoString, now);
 }

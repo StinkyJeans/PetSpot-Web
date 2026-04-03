@@ -17,7 +17,10 @@ export default function ResetPasswordForm() {
   useEffect(() => {
     if (!state?.success) return undefined;
     const t = window.setTimeout(() => {
-      router.push("/login");
+      router.push(
+        "/login?success=" +
+          encodeURIComponent("Password updated. Sign in with your new password."),
+      );
     }, 3000);
     return () => window.clearTimeout(t);
   }, [state?.success, router]);
@@ -31,7 +34,10 @@ export default function ResetPasswordForm() {
           Your password has been reset. Redirecting to login…
         </p>
         <Link
-          href="/login"
+          href={
+            "/login?success=" +
+            encodeURIComponent("Password updated. Sign in with your new password.")
+          }
           className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#184f24] px-4 py-3 text-sm font-semibold text-white hover:bg-[#123f1d]"
         >
           Go to login now
