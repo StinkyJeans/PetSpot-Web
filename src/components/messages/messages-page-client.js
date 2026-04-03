@@ -487,7 +487,7 @@ export default function MessagesPageClient({
                     className={`cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${
                       activeTab === tab.id
                         ? "bg-emerald-900 text-white"
-                        : "bg-white text-emerald-900 hover:bg-emerald-100"
+                        : "bg-white text-emerald-900 hover:bg-emerald-200/90"
                     }`}
                   >
                     {tab.label}
@@ -503,8 +503,10 @@ export default function MessagesPageClient({
                     key={c.id}
                     type="button"
                     onClick={() => setActiveConversationId(c.id)}
-                    className={`flex w-full cursor-pointer items-start gap-3 border-b border-emerald-100/80 px-4 py-3 text-left hover:bg-emerald-100/35 ${
-                      c.id === activeConversationId ? "bg-emerald-100/45" : ""
+                    className={`flex w-full cursor-pointer items-start gap-3 border-b border-emerald-100/80 px-4 py-3 text-left ${
+                      c.id === activeConversationId
+                        ? "bg-emerald-300/85"
+                        : "hover:bg-emerald-200/85"
                     }`}
                   >
                     <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-emerald-100">
@@ -683,7 +685,7 @@ export default function MessagesPageClient({
                     <button
                       type="button"
                       onClick={() => mediaInputRef.current?.click()}
-                      className="cursor-pointer rounded-full p-2 text-emerald-900 hover:bg-emerald-50"
+                      className="cursor-pointer rounded-full p-2 text-emerald-900 hover:bg-emerald-200/80"
                       aria-label="Attach"
                     >
                       <Plus size={14} />
@@ -832,7 +834,7 @@ export default function MessagesPageClient({
                     type="button"
                     disabled={startingConversationFor === f.userId}
                     onClick={() => startConversationWith(f.userId)}
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-emerald-50 disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-emerald-200/75 disabled:opacity-50"
                   >
                     <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-emerald-100">
                       {f.avatarUrl ? (

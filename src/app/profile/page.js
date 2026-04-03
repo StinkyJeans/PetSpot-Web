@@ -71,12 +71,14 @@ export default async function ProfilePage() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_2fr_1fr]">
         <aside className="hidden lg:block">
-          <div className="lg:fixed lg:bottom-4 lg:left-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
-            <FeedLeftSidebar
-              showEventSection={false}
-              profileName={sidebarProfileName}
-              profileImageUrl={profile?.profile_image_url ?? ""}
-            />
+          <div className="lg:fixed lg:bottom-4 lg:left-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:flex lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:flex-col lg:overflow-y-auto">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <FeedLeftSidebar
+                showEventSection={false}
+                profileName={sidebarProfileName}
+                profileImageUrl={profile?.profile_image_url ?? ""}
+              />
+            </div>
           </div>
         </aside>
 

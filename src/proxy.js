@@ -44,7 +44,8 @@ export async function proxy(request) {
     path.startsWith("/market") ||
     path.startsWith("/adopt") ||
     path.startsWith("/community") ||
-    path.startsWith("/events");
+    path.startsWith("/events") ||
+    path.startsWith("/search");
 
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/login", request.url));

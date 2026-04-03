@@ -54,9 +54,9 @@ export default function FeedLeftSidebar({
   const active = activeItem ?? getActiveByRoute(pathname, section);
 
   return (
-    <div className="space-y-4">
-      <div className="mb-3 flex min-h-[65vh] flex-col rounded-3xl p-4 lg:mb-0 lg:h-full lg:min-h-0">
-        <div className="flex-1">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 lg:h-full">
+      <div className="mb-3 flex min-h-[65vh] flex-1 flex-col rounded-3xl p-4 lg:mb-0 lg:min-h-0">
+        <div className="shrink-0">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50">
               {profileImageUrl ? (
@@ -87,7 +87,7 @@ export default function FeedLeftSidebar({
                     onFocus={() => requestRoutePrefetch(router, item.href)}
                     className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
                       item.id === active
-                        ? "bg-emerald-100/80 text-emerald-950"
+                        ? "bg-emerald-300/85 text-emerald-950 shadow-sm"
                         : "text-zinc-700 hover:bg-emerald-100/40"
                     }`}
                   >
@@ -100,7 +100,7 @@ export default function FeedLeftSidebar({
           </ul>
         </div>
 
-        <div className="mt-auto pt-6">
+        <div className="mt-auto shrink-0 pt-6">
           <div className="space-y-2">
             <Link
               href="/feed#create"
