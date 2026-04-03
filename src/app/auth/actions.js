@@ -98,3 +98,56 @@ export async function logout() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function requestPasswordReset(_, formData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+  const headerStore = await headers();
+  const origin =
+    headerStore.get("origin") ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "http://localhost:3000";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?recovery=1`,
+  });
+
+  if (error) {
+    return { error: normalizeError(error, "Could not send reset email.") };
+  }
+
+  // Always show success (Supabase does not reveal whether the email exists).
+  return { success: true };
+}
+
+export async function updatePasswordAfterRecovery(_, formData) {
+  const password = String(formData.get("password") ?? "").trim();
+  const confirm = String(formData.get("confirm") ?? "").trim();
+
+  if (!password || !confirm) {
+    return { error: "Please enter and confirm your new password." };
+  }
+
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+
+  if (password !== confirm) {
+    return { error: "Passwords do not match." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: normalizeError(error, "Could not update password.") };
+  }
+
+  await supabase.auth.signOut();
+  return { success: true };
+}

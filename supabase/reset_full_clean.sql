@@ -1,8 +1,13 @@
 -- =============================================================================
--- FULL RESET: public schema + Storage (PetSpot)
+-- NUCLEAR RESET — REMOVES THE ENTIRE DATABASE STRUCTURE (not “data only”)
 -- =============================================================================
--- WARNING: Irreversible. Deletes ALL app tables, functions, types in `public`
--- and ALL files in Storage buckets used by this app.
+-- This script DROPS THE WHOLE `public` SCHEMA: all tables, columns, RLS,
+-- functions, types — everything. After this, pet_profiles and every other
+-- table DOES NOT EXIST until you re-run migrations (supabase db push).
+--
+-- For “delete rows but keep tables” use: truncate_public_data_only.sql
+--
+-- WARNING: Irreversible. Also deletes ALL files in app Storage buckets.
 --
 -- Does NOT delete auth.users (Supabase Auth). To remove test users, use the
 -- Dashboard → Authentication → Users, or the Admin API.
@@ -22,8 +27,16 @@ begin;
 -- ---------------------------------------------------------------------------
 -- 1) Storage: remove objects, then buckets this app created
 -- ---------------------------------------------------------------------------
+-- Supabase blocks raw DELETE on storage tables (storage.protect_delete). We
+-- temporarily disable triggers, then re-enable. If this step fails, skip it
+-- and empty buckets via Dashboard → Storage (select files → delete), or
+-- supabase storage commands, then re-run from section 2 only.
+-- ---------------------------------------------------------------------------
+alter table storage.objects disable trigger all;
 delete from storage.objects;
+alter table storage.objects enable trigger all;
 
+alter table storage.buckets disable trigger all;
 delete from storage.buckets
 where id in (
   'profile-picture',
@@ -31,6 +44,7 @@ where id in (
   'media-post',
   'media-stories'
 );
+alter table storage.buckets enable trigger all;
 
 -- ---------------------------------------------------------------------------
 -- 2) Drop entire public schema (all tables, views, functions, types, etc.)

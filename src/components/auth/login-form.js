@@ -88,6 +88,14 @@ export default function LoginForm({ initialError, initialSuccess }) {
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
+        <p className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-semibold text-emerald-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </p>
         <button
           type="submit"
           disabled={pending}
