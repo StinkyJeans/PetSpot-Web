@@ -11,8 +11,13 @@ export default async function Home() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_#eef7ef,_#dfeadf)] p-6">
-      <section className="w-full max-w-xl rounded-3xl bg-white/90 p-10 shadow-xl">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
+      <div
+        className="absolute inset-0 bg-center bg-cover scale-105 blur-[3px]"
+        style={{ backgroundImage: "url('/background-image/Pet.png')" }}
+      />
+      <div className="absolute inset-0 bg-[#edf4e9]/70" />
+      <section className="relative z-10 w-full max-w-xl rounded-3xl bg-white/90 p-10 shadow-xl">
         <p className="text-sm font-semibold text-emerald-800">PetSpot</p>
         <h1 className="mt-2 text-4xl font-bold text-zinc-900">
           Social home for dog owners and dog lovers.

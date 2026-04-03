@@ -23,9 +23,35 @@ export async function GET(request) {
   }
 
   if (emailConfirm) {
-    // Email confirmation should not immediately log the user in.
-    // Just show success and send them to the login screen.
-    return NextResponse.redirect(new URL("/login?success=email+confirmed", redirectTo));
+    // Complete email verification, then sign out so the user lands on the success page
+    // and signs in explicitly from the login screen.
+    const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+    const response = NextResponse.redirect(new URL("/auth/email-confirmed", redirectTo));
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(
+        new URL(
+          `/login?error=${encodeURIComponent(error.message || "Could not confirm your email.")}`,
+          redirectTo,
+        ),
+      );
+    }
+
+    await supabase.auth.signOut();
+    return response;
   }
 
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();

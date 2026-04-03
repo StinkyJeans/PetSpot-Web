@@ -44,10 +44,10 @@ export async function signupWithPassword(_, formData) {
     return { error: normalizeError(error, "Could not create your account.") };
   }
 
+  // No session only when Supabase has "Confirm email" enabled (Auth → Providers → Email).
+  // If that toggle is off, signUp returns a session immediately and the user goes to onboarding below.
   if (!data?.session) {
-    redirect(
-      "/login?error=Account+created.+Please+confirm+your+email+before+logging+in.",
-    );
+    return { success: true, needsEmailConfirmation: true };
   }
 
   redirect("/onboarding/pet");

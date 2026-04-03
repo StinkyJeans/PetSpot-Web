@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { loginWithPassword, signInWithGoogle } from "@/app/auth/actions";
 import { ArrowRight, Email, Google, Password } from "griddy-icons";
 import { useToast } from "@/components/feedback/toast-provider";
@@ -16,6 +16,7 @@ export default function LoginForm({ initialError, initialSuccess }) {
   const error = state?.error || initialError;
   const { showToast } = useToast();
   const lastToastErrorRef = useRef("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!initialSuccess) return;
@@ -70,13 +71,22 @@ export default function LoginForm({ initialError, initialSuccess }) {
         <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-[#f4f8f1] px-3">
           <Password size={18} color="#6b7280" />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Password"
             autoComplete="current-password"
-            className="w-full bg-transparent py-2.5 text-sm text-zinc-900 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-zinc-900 focus:outline-none"
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="shrink-0 cursor-pointer text-xs font-semibold text-emerald-800 hover:text-emerald-950"
+            aria-pressed={showPassword}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
         </div>
         <button
           type="submit"

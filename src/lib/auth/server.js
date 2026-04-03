@@ -3,15 +3,15 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function getCurrentUser() {
   const supabase = await getSupabaseServerClient();
-  // `getUser()` hits the Supabase Auth API (network). For SSR checks like "already logged in?",
-  // we can use `getSession()` which is cookie-based and much faster.
-  const { data, error } = await supabase.auth.getSession();
+  // Use getUser(), not getSession(), on the server. Session cookies can be stale; getUser()
+  // validates the JWT with Supabase and avoids login ↔ feed redirect loops.
+  const { data, error } = await supabase.auth.getUser();
 
   if (error) {
     return null;
   }
 
-  return data?.session?.user ?? null;
+  return data?.user ?? null;
 }
 
 export async function requireUser() {
