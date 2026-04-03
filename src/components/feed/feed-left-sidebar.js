@@ -44,6 +44,8 @@ export default function FeedLeftSidebar({
   followedEvents = [],
   activeItem,
   showEventSection = true,
+  /** When true (e.g. mobile drawer), drop tall min-height so the panel scrolls cleanly. */
+  embedded = false,
   profileName = "Profile",
   profileImageUrl = "",
 }) {
@@ -54,8 +56,16 @@ export default function FeedLeftSidebar({
   const active = activeItem ?? getActiveByRoute(pathname, section);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 lg:h-full">
-      <div className="mb-3 flex min-h-[65vh] flex-1 flex-col rounded-3xl p-4 lg:mb-0 lg:min-h-0">
+    <div
+      className={`flex min-h-0 flex-col gap-4 lg:h-full ${
+        embedded ? "h-full min-h-0 flex-1" : "flex-1"
+      }`}
+    >
+      <div
+        className={`mb-3 flex min-h-0 flex-1 flex-col rounded-3xl p-4 lg:mb-0 ${
+          embedded ? "min-h-0 flex-1" : "min-h-[65vh] lg:min-h-0"
+        }`}
+      >
         <div className="shrink-0">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50">

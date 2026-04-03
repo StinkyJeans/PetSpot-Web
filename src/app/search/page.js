@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
-import FeedTopNav from "@/components/feed/feed-top-nav";
+import MainAppChrome from "@/components/layout/main-app-chrome";
 import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
 import { SearchPageRecentList, SearchRecentRecorder } from "@/components/search/search-recent-client";
 import { getOptimizedImageUrl } from "@/lib/imageUrl";
@@ -55,10 +55,10 @@ export default async function SearchPage({ searchParams }) {
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
       <RouteSnapshotWriter routeKey="/search" snapshot={searchSnapshot} />
-      <SearchRecentRecorder query={q} />
-      <FeedTopNav searchInitialQuery={q} />
+      <MainAppChrome searchInitialQuery={q}>
+        <SearchRecentRecorder query={q} />
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+        <main className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="text-xl font-bold text-zinc-900">Search</h1>
         {hint ? <p className="mt-2 text-sm text-zinc-600">{hint}</p> : null}
         <SearchPageRecentList query={q} />
@@ -134,6 +134,7 @@ export default async function SearchPage({ searchParams }) {
           </section>
         ) : null}
       </main>
+      </MainAppChrome>
     </div>
   );
 }

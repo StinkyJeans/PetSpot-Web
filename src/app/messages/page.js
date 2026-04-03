@@ -1,4 +1,4 @@
-import FeedTopNav from "@/components/feed/feed-top-nav";
+import MainAppChrome from "@/components/layout/main-app-chrome";
 import MessagesPageClient from "@/components/messages/messages-page-client";
 import RouteSnapshotWriter from "@/components/navigation/route-snapshot-writer";
 import { requirePrimaryPetProfile, requireUser } from "@/lib/auth/server";
@@ -25,13 +25,14 @@ export default async function MessagesPage({ searchParams }) {
   return (
     <div className="min-h-screen bg-[#F1F8F1]">
       <RouteSnapshotWriter routeKey="/messages" snapshot={messagesSnapshot} />
-      <FeedTopNav active="messages" />
-      <MessagesPageClient
-        viewerUserId={user.id}
-        initialConversations={conversations}
-        initialConversationId={activeConversationId}
-        initialMessages={initialMessages}
-      />
+      <MainAppChrome active="messages" chromeVariant="messages">
+        <MessagesPageClient
+          viewerUserId={user.id}
+          initialConversations={conversations}
+          initialConversationId={activeConversationId}
+          initialMessages={initialMessages}
+        />
+      </MainAppChrome>
     </div>
   );
 }

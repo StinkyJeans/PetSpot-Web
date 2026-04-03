@@ -28,7 +28,16 @@ export default function FeedShell({
           </div>
         </aside>
 
-        <div className="flex flex-col gap-5">{children}</div>
+        <div className="flex flex-col gap-5">
+          {children}
+          <div className="mt-2 lg:hidden">
+            <EventSection
+              myEvents={myEvents}
+              otherEvents={otherEvents}
+              followedEvents={followedEvents}
+            />
+          </div>
+        </div>
 
         <aside className="hidden lg:block">
           <div className="lg:fixed lg:bottom-4 lg:right-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">
@@ -41,19 +50,6 @@ export default function FeedShell({
             </FeedRightSidebar>
           </div>
         </aside>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-10 lg:hidden">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <FeedLeftSidebar
-            showEventSection={false}
-            profileName={profileName}
-            profileImageUrl={profileImageUrl}
-          />
-          <FeedRightSidebar>
-            <EventSection myEvents={myEvents} otherEvents={otherEvents} followedEvents={followedEvents} />
-          </FeedRightSidebar>
-        </div>
       </div>
     </>
   );

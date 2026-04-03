@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { compressMediaForUpload } from "@/lib/media/compress-upload-media";
 import { buildUserMediaPath } from "@/lib/storage/helpers";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useLiveRelativeTime } from "@/lib/time/live-relative-time";
 import { getOptimizedImageUrl } from "@/lib/imageUrl";
 import { InfoCircle, Phone, Plus, Send, VideoCamera } from "griddy-icons";
+import MessagesMobileSidebarDrawer from "@/components/messages/messages-mobile-sidebar-drawer";
+import { useMessagesMobileSidebar } from "@/components/messages/messages-mobile-sidebar-context";
 
 const MAX_VIDEO_UPLOAD_BYTES = 15 * 1024 * 1024;
 
@@ -60,6 +62,93 @@ function RelativeTime({ iso }) {
   return label ? label : "";
 }
 
+function MessagesConversationsPanel({
+  activeTab,
+  setActiveTab,
+  onNewMessageClick,
+  tabbedConversations,
+  activeConversationId,
+  onPickConversation,
+  conversationListClassName,
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="border-b-2 border-emerald-200 px-4 py-4">
+        <p className="text-xl font-bold text-emerald-950">Conversations</p>
+        <p className="mt-1 text-xs text-zinc-500">Recent chats</p>
+        <button
+          type="button"
+          onClick={onNewMessageClick}
+          className="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-950"
+        >
+          <Plus size={15} color="#fff" />
+          New Message
+        </button>
+        <div className="mt-3 flex items-center gap-2">
+          {[
+            { id: "followed", label: "FOLLOWED" },
+            { id: "community", label: "COMMUNITY" },
+            { id: "group", label: "GROUP" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${
+                activeTab === tab.id
+                  ? "bg-emerald-900 text-white"
+                  : "bg-white text-emerald-900 hover:bg-emerald-200/90"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={conversationListClassName}>
+        {tabbedConversations.length ? (
+          tabbedConversations.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onPickConversation(c.id)}
+              className={`flex w-full cursor-pointer items-start gap-3 border-b border-emerald-100/80 px-4 py-3 text-left ${
+                c.id === activeConversationId
+                  ? "bg-emerald-300/85"
+                  : "hover:bg-emerald-200/85"
+              }`}
+            >
+              <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-emerald-100">
+                {c.partnerAvatarUrl ? (
+                  <img src={c.partnerAvatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="m-auto text-xs font-bold text-emerald-900">
+                    {c.partnerHeadline.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-zinc-900">{c.partnerHeadline}</p>
+                <p className="truncate text-xs text-zinc-500">{c.lastMessage || "Say hello!"}</p>
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                <RelativeTime iso={c.lastMessageAt} />
+              </span>
+            </button>
+          ))
+        ) : activeTab === "followed" ? (
+          <p className="px-4 py-8 text-sm text-zinc-500">No conversations yet. Open a profile and click Message.</p>
+        ) : (
+          <p className="px-4 py-8 text-sm text-zinc-500">
+            No {activeTab === "group" ? "group" : "community"} chats yet.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function MessagesPageClient({
   viewerUserId,
   initialConversations = [],
@@ -81,6 +170,15 @@ export default function MessagesPageClient({
   const [viewerMedia, setViewerMedia] = useState(null);
   const bottomRef = useRef(null);
   const mediaInputRef = useRef(null);
+  const msgSidebar = useMessagesMobileSidebar();
+
+  const pickConversation = useCallback(
+    (id) => {
+      setActiveConversationId(id);
+      msgSidebar?.close();
+    },
+    [msgSidebar],
+  );
 
   const tabbedConversations = useMemo(() => {
     if (activeTab === "followed") return conversations;
@@ -460,84 +558,24 @@ export default function MessagesPageClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-3 py-4">
-      <div className="grid h-[76vh] grid-cols-1 gap-3 lg:grid-cols-[300px_minmax(620px,1fr)_240px]">
-          <aside className="overflow-hidden rounded-2xl bg-[#F1F8F1]">
-            <div className="border-b-2 border-emerald-200 px-4 py-4">
-              <p className="text-xl font-bold text-emerald-950">Conversations</p>
-              <p className="mt-1 text-xs text-zinc-500">Recent chats</p>
-              <button
-                type="button"
-                onClick={() => setNewMessageOpen(true)}
-                className="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-950"
-              >
-                <Plus size={15} color="#fff" />
-                New Message
-              </button>
-              <div className="mt-3 flex items-center gap-2">
-                {[
-                  { id: "followed", label: "FOLLOWED" },
-                  { id: "community", label: "COMMUNITY" },
-                  { id: "group", label: "GROUP" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${
-                      activeTab === tab.id
-                        ? "bg-emerald-900 text-white"
-                        : "bg-white text-emerald-900 hover:bg-emerald-200/90"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="max-h-[67vh] overflow-y-auto hide-scrollbar">
-              {tabbedConversations.length ? (
-                tabbedConversations.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setActiveConversationId(c.id)}
-                    className={`flex w-full cursor-pointer items-start gap-3 border-b border-emerald-100/80 px-4 py-3 text-left ${
-                      c.id === activeConversationId
-                        ? "bg-emerald-300/85"
-                        : "hover:bg-emerald-200/85"
-                    }`}
-                  >
-                    <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-emerald-100">
-                      {c.partnerAvatarUrl ? (
-                        <img src={c.partnerAvatarUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="m-auto text-xs font-bold text-emerald-900">
-                          {c.partnerHeadline.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-zinc-900">{c.partnerHeadline}</p>
-                      <p className="truncate text-xs text-zinc-500">{c.lastMessage || "Say hello!"}</p>
-                    </span>
-                    <span className="text-[10px] text-zinc-400">
-                      <RelativeTime iso={c.lastMessageAt} />
-                    </span>
-                  </button>
-                ))
-              ) : activeTab === "followed" ? (
-                <p className="px-4 py-8 text-sm text-zinc-500">No conversations yet. Open a profile and click Message.</p>
-              ) : (
-                <p className="px-4 py-8 text-sm text-zinc-500">
-                  No {activeTab === "group" ? "group" : "community"} chats yet.
-                </p>
-              )}
-            </div>
+    <div className="mx-auto w-full max-w-[1280px] px-3 pb-0 pt-4 lg:py-4">
+      <div className="grid h-[76vh] max-lg:min-h-[calc(100dvh-9.5rem)] max-lg:h-[calc(100dvh-9.5rem)] grid-cols-1 gap-3 lg:grid-cols-[300px_minmax(620px,1fr)_240px]">
+          <aside className="hidden min-h-0 flex-col overflow-hidden rounded-2xl bg-[#F1F8F1] lg:flex lg:h-full">
+            <MessagesConversationsPanel
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onNewMessageClick={() => {
+                setNewMessageOpen(true);
+                msgSidebar?.close();
+              }}
+              tabbedConversations={tabbedConversations}
+              activeConversationId={activeConversationId}
+              onPickConversation={pickConversation}
+              conversationListClassName="max-h-[67vh] overflow-y-auto hide-scrollbar"
+            />
           </aside>
 
-          <section className="flex h-[76vh] max-h-[76vh] flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-[#f7faf7] shadow-sm">
+          <section className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-[#f7faf7] shadow-sm max-lg:rounded-b-none">
             {activeConversation ? (
               <>
                 <div className="flex items-center justify-between border-b border-emerald-100 bg-white px-4 py-3">
@@ -569,7 +607,7 @@ export default function MessagesPageClient({
                   </div>
                 </div>
 
-                <div className="hide-scrollbar flex-1 overflow-y-auto px-5 py-4">
+                <div className="hide-scrollbar flex-1 overflow-y-auto px-5 py-4 max-lg:pb-[calc(6.25rem+env(safe-area-inset-bottom,0px))]">
                   {messages.length ? (
                     <div className="space-y-3">
                       <div className="mx-auto mb-1 w-fit rounded-full bg-zinc-200 px-3 py-1 text-[10px] font-semibold text-zinc-600">
@@ -665,7 +703,10 @@ export default function MessagesPageClient({
                   )}
                 </div>
 
-                <form onSubmit={sendCurrentMessage} className="border-t border-emerald-100 bg-white px-4 py-3">
+                <form
+                  onSubmit={sendCurrentMessage}
+                  className="border-t border-emerald-100 bg-white px-4 py-3 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-emerald-100 max-lg:px-4 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-lg:pt-3 max-lg:shadow-[0_-10px_40px_rgba(15,23,42,0.08)]"
+                >
                   {selectedMediaFile ? (
                     <div className="mb-2 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
                       <p className="truncate text-xs font-medium text-emerald-900">{selectedMediaFile.name}</p>
@@ -802,6 +843,23 @@ export default function MessagesPageClient({
             )}
           </aside>
       </div>
+
+      {msgSidebar?.open ? (
+        <MessagesMobileSidebarDrawer open={msgSidebar.open} onClose={msgSidebar.close}>
+          <MessagesConversationsPanel
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onNewMessageClick={() => {
+              setNewMessageOpen(true);
+              msgSidebar?.close();
+            }}
+            tabbedConversations={tabbedConversations}
+            activeConversationId={activeConversationId}
+            onPickConversation={pickConversation}
+            conversationListClassName="min-h-0 flex-1 overflow-y-auto hide-scrollbar"
+          />
+        </MessagesMobileSidebarDrawer>
+      ) : null}
 
       {newMessageOpen ? (
         <div

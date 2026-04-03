@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Search } from "griddy-icons";
 import { searchPack } from "@/app/search/actions";
 import { getOptimizedImageUrl } from "@/lib/imageUrl";
@@ -45,12 +45,18 @@ function SectionTitle({ children }) {
   );
 }
 
-export default function GlobalSearch({ initialQuery = "" }) {
+/**
+ * @param {{ initialQuery?: string, variant?: 'inline' | 'modal', onRequestClose?: () => void }} props
+ */
+export default function GlobalSearch({ initialQuery = "", variant = "inline", onRequestClose }) {
   const router = useRouter();
+  const panelId = useId();
   const rootRef = useRef(null);
+  const inputRef = useRef(null);
   const debounceRef = useRef(null);
+  const isModal = variant === "modal";
   const [query, setQuery] = useState(initialQuery);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(isModal);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({ users: [], pages: [], communities: [] });
   const recentAll = useRecentSearches();
@@ -58,6 +64,23 @@ export default function GlobalSearch({ initialQuery = "" }) {
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
+
+  useEffect(() => {
+    if (!isModal) return undefined;
+    const t = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(t);
+  }, [isModal]);
+
+  useEffect(() => {
+    if (!isModal || !onRequestClose) return undefined;
+    function onDocKey(e) {
+      if (e.key === "Escape") onRequestClose();
+    }
+    document.addEventListener("keydown", onDocKey);
+    return () => document.removeEventListener("keydown", onDocKey);
+  }, [isModal, onRequestClose]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -84,12 +107,13 @@ export default function GlobalSearch({ initialQuery = "" }) {
   }, [query]);
 
   useEffect(() => {
+    if (isModal) return undefined;
     function onDoc(e) {
       if (!rootRef.current?.contains(e.target)) setOpen(false);
     }
     if (open) document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+  }, [open, isModal]);
 
   const prefetchSearch = useCallback(
     (q) => {
@@ -115,6 +139,11 @@ export default function GlobalSearch({ initialQuery = "" }) {
   const showRecent = qTrim.length < 2 && recentFiltered.length > 0;
   const showStartHint = qTrim.length === 0 && recentFiltered.length === 0;
 
+  function closeAndNotify() {
+    setOpen(false);
+    onRequestClose?.();
+  }
+
   function onKeyDown(e) {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -122,21 +151,35 @@ export default function GlobalSearch({ initialQuery = "" }) {
       if (q.length >= 2) {
         addRecentSearch(q);
         router.push(`/search?q=${encodeURIComponent(q)}`);
+        closeAndNotify();
+      }
+    }
+    if (e.key === "Escape") {
+      if (isModal && onRequestClose) {
+        e.preventDefault();
+        onRequestClose();
+      } else {
         setOpen(false);
       }
     }
-    if (e.key === "Escape") setOpen(false);
   }
+
+  const showPanel = isModal || open;
+
+  const panelPositionClass = isModal
+    ? "relative mt-3 max-h-[min(65vh,520px)] overflow-y-auto rounded-2xl border border-emerald-100 bg-white py-2 shadow-inner"
+    : "absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(70vh,420px)] overflow-y-auto rounded-2xl border border-emerald-100 bg-white py-2 shadow-xl";
 
   return (
     <div
-      className={`relative min-w-0 flex-1 ${open ? "z-30" : ""}`}
+      className={`relative min-w-0 ${isModal ? "w-full" : `flex-1 ${open ? "z-30" : ""}`}`}
       ref={rootRef}
       role="search"
     >
       <div className="flex min-w-0 items-center gap-2 rounded-full border border-emerald-100 bg-white px-3 py-2 shadow-sm">
         <Search size={18} color="#6b7280" className="shrink-0" aria-hidden />
         <input
+          ref={inputRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -146,16 +189,16 @@ export default function GlobalSearch({ initialQuery = "" }) {
           className="min-w-0 flex-1 bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
           aria-label="Search users, pages, and communities"
           aria-autocomplete="list"
-          aria-controls="global-search-panel"
+          aria-controls={panelId}
           aria-haspopup="listbox"
           autoComplete="off"
         />
       </div>
 
-      {open ? (
+      {showPanel ? (
         <div
-          id="global-search-panel"
-          className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(70vh,420px)] overflow-y-auto rounded-2xl border border-emerald-100 bg-white py-2 shadow-xl"
+          id={panelId}
+          className={`${panelPositionClass}`}
           role="listbox"
           aria-label="Search suggestions"
         >
@@ -183,7 +226,7 @@ export default function GlobalSearch({ initialQuery = "" }) {
                         addRecentSearch(term);
                         setQuery(term);
                         router.push(`/search?q=${encodeURIComponent(term)}`);
-                        setOpen(false);
+                        closeAndNotify();
                       }}
                     >
                       {term}
@@ -231,7 +274,7 @@ export default function GlobalSearch({ initialQuery = "" }) {
                     <Link
                       href={u.href}
                       className="flex items-center gap-3 px-3 py-2 text-left hover:bg-emerald-50"
-                      onClick={() => setOpen(false)}
+                      onClick={closeAndNotify}
                     >
                       <Avatar url={u.avatarUrl} label={u.headline} />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">{u.headline}</span>
@@ -251,7 +294,7 @@ export default function GlobalSearch({ initialQuery = "" }) {
                     <Link
                       href={p.href}
                       className="flex items-center gap-3 px-3 py-2 text-left hover:bg-emerald-50"
-                      onClick={() => setOpen(false)}
+                      onClick={closeAndNotify}
                     >
                       {p.kind === "pet" ? (
                         <Avatar url={p.avatarUrl ?? ""} label={p.title} />
@@ -288,7 +331,7 @@ export default function GlobalSearch({ initialQuery = "" }) {
                     <Link
                       href={c.href}
                       className="flex flex-col gap-0.5 px-3 py-2 text-left hover:bg-emerald-50"
-                      onClick={() => setOpen(false)}
+                      onClick={closeAndNotify}
                     >
                       <span className="text-sm font-medium text-zinc-900">{c.name}</span>
                       {c.subtitle ? <span className="text-xs text-zinc-500">{c.subtitle}</span> : null}
@@ -306,7 +349,7 @@ export default function GlobalSearch({ initialQuery = "" }) {
                 className="block rounded-xl py-2 text-center text-sm font-semibold text-emerald-900 hover:bg-emerald-50"
                 onClick={() => {
                   addRecentSearch(query.trim());
-                  setOpen(false);
+                  closeAndNotify();
                 }}
                 onMouseEnter={() => prefetchSearch(query)}
               >
