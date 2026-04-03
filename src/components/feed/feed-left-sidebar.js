@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import { logout } from "@/app/auth/actions";
 import EventSection from "@/components/event/event-section";
 import { getOptimizedImageUrl } from "@/lib/imageUrl";
@@ -15,6 +16,19 @@ const explore = [
   { id: "groups", href: "/community", label: "Groups", icon: UsersGroup },
   { id: "memories", href: "/profile?section=memories", label: "Memories", icon: PhotoCamera },
 ];
+
+function LogoutSubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? "Logging out…" : "Log out"}
+    </button>
+  );
+}
 
 function getActiveByRoute(pathname, section) {
   if (pathname === "/profile") return section === "memories" ? "memories" : "profile";
@@ -98,12 +112,7 @@ export default function FeedLeftSidebar({
               Create
             </Link>
             <form action={logout}>
-              <button
-                type="submit"
-                className="w-full rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
-              >
-                Log out
-              </button>
+              <LogoutSubmitButton />
             </form>
           </div>
         </div>

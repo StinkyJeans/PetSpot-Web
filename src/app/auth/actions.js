@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
+/** Shown on login after a successful recovery password update (server redirect avoids RSC revalidate race). */
+const PASSWORD_RESET_LOGIN_SUCCESS_MESSAGE =
+  "Password changed successfully. Now log in with your new password.";
+
 function normalizeError(error, fallbackMessage) {
   if (error?.message) {
     return error.message;
@@ -216,5 +220,5 @@ export async function updatePasswordAfterRecovery(_, formData) {
   }
 
   await supabase.auth.signOut();
-  return { success: true };
+  redirect("/login?success=" + encodeURIComponent(PASSWORD_RESET_LOGIN_SUCCESS_MESSAGE));
 }

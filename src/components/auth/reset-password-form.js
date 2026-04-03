@@ -1,50 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { updatePasswordAfterRecovery } from "@/app/auth/actions";
 import { ArrowRight, Password } from "griddy-icons";
 
-const initialState = { error: "", success: false };
+const initialState = { error: "" };
 
 export default function ResetPasswordForm() {
-  const router = useRouter();
   const [state, action, pending] = useActionState(updatePasswordAfterRecovery, initialState);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  useEffect(() => {
-    if (!state?.success) return undefined;
-    const t = window.setTimeout(() => {
-      router.push(
-        "/login?success=" +
-          encodeURIComponent("Password updated. Sign in with your new password."),
-      );
-    }, 3000);
-    return () => window.clearTimeout(t);
-  }, [state?.success, router]);
-
-  if (state?.success) {
-    return (
-      <div className="relative z-10 w-full max-w-md rounded-[28px] border border-white/70 bg-white/95 p-8 text-center shadow-2xl">
-        <p className="text-sm font-bold text-emerald-800">PetSpot</p>
-        <h1 className="mt-3 text-xl font-black tracking-tight text-zinc-900">Password updated</h1>
-        <p className="mt-4 text-sm leading-relaxed text-zinc-600">
-          Your password has been reset. Redirecting to login…
-        </p>
-        <Link
-          href={
-            "/login?success=" +
-            encodeURIComponent("Password updated. Sign in with your new password.")
-          }
-          className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#184f24] px-4 py-3 text-sm font-semibold text-white hover:bg-[#123f1d]"
-        >
-          Go to login now
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="relative z-10 w-full max-w-md rounded-[28px] border border-white/70 bg-white/95 p-8 shadow-2xl">

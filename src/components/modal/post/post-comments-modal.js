@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatCount } from "@/components/feed/format-count";
@@ -83,29 +84,55 @@ function CommentThreadItem({ comment, depth, onReply, onToggleCommentLike, comme
   const initial = name.replace(/&/g, "").trim().slice(0, 1).toUpperCase() || "?";
   const replyCount = comment.replies?.length ?? 0;
   const hasReplies = replyCount > 0;
+  const profileHref = comment.userId ? `/profile/${comment.userId}` : null;
+
+  const avatarInner = (
+    <>
+      {comment.authorAvatarUrl ? (
+        <img
+          src={getOptimizedImageUrl(comment.authorAvatarUrl, { width: 64, height: 64 })}
+          alt=""
+          width={32}
+          height={32}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-emerald-900">
+          {initial}
+        </span>
+      )}
+    </>
+  );
 
   return (
     <li className="text-sm">
       <div className="flex gap-2">
-        <span className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
-          {comment.authorAvatarUrl ? (
-            <img
-              src={getOptimizedImageUrl(comment.authorAvatarUrl, { width: 64, height: 64 })}
-              alt=""
-              width={32}
-              height={32}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-emerald-900">
-              {initial}
-            </span>
-          )}
-        </span>
+        {profileHref ? (
+          <Link
+            href={profileHref}
+            className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50 transition-opacity hover:opacity-90"
+            aria-label={`${name} profile`}
+          >
+            {avatarInner}
+          </Link>
+        ) : (
+          <span className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full border border-emerald-100 bg-emerald-50">
+            {avatarInner}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-3 py-2">
-            <p className="text-xs font-semibold text-zinc-900">{name}</p>
+            {profileHref ? (
+              <Link
+                href={profileHref}
+                className="text-xs font-semibold text-zinc-900 hover:underline"
+              >
+                {name}
+              </Link>
+            ) : (
+              <p className="text-xs font-semibold text-zinc-900">{name}</p>
+            )}
             <p className="text-sm text-zinc-800">{comment.body}</p>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-3 pl-1 text-[11px] font-semibold">

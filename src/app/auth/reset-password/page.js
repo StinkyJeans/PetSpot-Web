@@ -13,9 +13,7 @@ export default async function ResetPasswordPage() {
   if (!user) {
     redirect(
       "/login?error=" +
-        encodeURIComponent(
-          "This password reset page needs an active reset session. That happens after you open the link from your email. If you already finished resetting your password, sign in below. Otherwise use Forgot password to get a new link.",
-        ),
+        encodeURIComponent("Reset link is invalid or expired. Request a new one from Forgot password."),
     );
   }
 
