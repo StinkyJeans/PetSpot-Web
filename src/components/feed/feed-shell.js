@@ -28,16 +28,7 @@ export default function FeedShell({
           </div>
         </aside>
 
-        <div className="flex flex-col gap-5">
-          {children}
-          <div className="mt-2 lg:hidden">
-            <EventSection
-              myEvents={myEvents}
-              otherEvents={otherEvents}
-              followedEvents={followedEvents}
-            />
-          </div>
-        </div>
+        <div className="flex flex-col gap-5">{children}</div>
 
         <aside className="hidden lg:block">
           <div className="lg:fixed lg:bottom-4 lg:right-[calc(50%-min(80rem,calc(100vw-2rem))/2)] lg:top-[5.5rem] lg:w-[calc((min(80rem,calc(100vw-2rem))-3rem)/4)] lg:overflow-y-auto">

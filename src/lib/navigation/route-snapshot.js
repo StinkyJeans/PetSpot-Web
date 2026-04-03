@@ -63,6 +63,7 @@ export const APP_SHELL_PREFETCH_ROUTES = [
   "/community",
   "/market",
   "/adopt",
+  "/events",
   "/events/new",
   "/profile?section=memories",
 ];

@@ -12,7 +12,7 @@ import { Calendar, PhotoCamera, Plus, TrendUp, User, UsersGroup } from "griddy-i
 const explore = [
   { id: "profile", href: "/profile", label: "Profile", icon: User },
   { id: "trending", href: "/feed", label: "Trending", icon: TrendUp },
-  { id: "events", href: "/events/new", label: "Events", icon: Calendar },
+  { id: "events", href: "/events", label: "Events", icon: Calendar },
   { id: "groups", href: "/community", label: "Groups", icon: UsersGroup },
   { id: "memories", href: "/profile?section=memories", label: "Memories", icon: PhotoCamera },
 ];
