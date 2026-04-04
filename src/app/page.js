@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { signInWithGoogle } from "@/app/auth/actions";
 import { getCurrentUser, hasPrimaryPetProfile } from "@/lib/auth/server";
+import { Google } from "griddy-icons";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -25,19 +27,30 @@ export default async function Home() {
         <p className="mt-4 text-zinc-600">
           Build your pet profile, share moments, and connect with your community.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/signup"
-            className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-          >
-            Create account
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full border border-zinc-200 px-5 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
-          >
-            Log in
-          </Link>
+        <div className="mt-8 flex flex-col gap-3">
+          <form action={signInWithGoogle}>
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-zinc-200 bg-[#eef4e8] px-5 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-[#e6efde]"
+            >
+              <Google size={18} />
+              Continue with Google
+            </button>
+          </form>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/signup"
+              className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+            >
+              Create account
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-full border border-zinc-200 px-5 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+            >
+              Log in
+            </Link>
+          </div>
         </div>
       </section>
     </main>

@@ -17,6 +17,29 @@ function normalizeError(error, fallbackMessage) {
   return fallbackMessage;
 }
 
+/**
+ * OAuth and email redirect URLs must match the live site origin. Server actions
+ * often omit the `Origin` header; use forwarded host/proto when needed.
+ */
+async function resolveAppOrigin() {
+  const h = await headers();
+  const origin = h.get("origin");
+  if (origin) return origin;
+
+  const forwardedHost = h.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = h.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const host = h.get("host");
+  const effectiveHost = forwardedHost || host;
+  if (effectiveHost) {
+    const proto =
+      forwardedProto ||
+      (effectiveHost.includes("localhost") || effectiveHost.startsWith("127.") ? "http" : "https");
+    return `${proto}://${effectiveHost}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
+
 /** Server actions must return plain JSON; coerce DB timestamps to ISO strings. */
 function toPasswordHintIso(value) {
   if (value == null || value === "") return null;
@@ -66,11 +89,7 @@ export async function signupWithPassword(_, formData) {
   }
 
   const supabase = await getSupabaseServerClient();
-  const headerStore = await headers();
-  const origin =
-    headerStore.get("origin") ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000";
+  const origin = await resolveAppOrigin();
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -121,11 +140,7 @@ export async function loginWithPassword(_, formData) {
 
 export async function signInWithGoogle() {
   const supabase = await getSupabaseServerClient();
-  const headerStore = await headers();
-  const origin =
-    headerStore.get("origin") ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000";
+  const origin = await resolveAppOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -161,11 +176,7 @@ export async function requestPasswordReset(_, formData) {
   }
 
   const supabase = await getSupabaseServerClient();
-  const headerStore = await headers();
-  const origin =
-    headerStore.get("origin") ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000";
+  const origin = await resolveAppOrigin();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback?recovery=1`,
