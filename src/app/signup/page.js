@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import SignupForm from "@/components/auth/signup-form";
+import AuthPetRunner from "@/components/auth/auth-pet-runner";
 import { getCurrentUser } from "@/lib/auth/server";
 
 export default async function SignupPage() {
@@ -16,6 +17,7 @@ export default async function SignupPage() {
         style={{ backgroundImage: "url('/background-image/Pet.png')" }}
       />
       <div className="absolute inset-0 bg-[#edf4e9]/70" />
+      <AuthPetRunner />
       <SignupForm />
     </main>
   );

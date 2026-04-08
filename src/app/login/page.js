@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import LoginForm from "@/components/auth/login-form";
+import AuthPetRunner from "@/components/auth/auth-pet-runner";
 import { getCurrentUser } from "@/lib/auth/server";
 
 export default async function LoginPage({ searchParams }) {
@@ -22,6 +23,7 @@ export default async function LoginPage({ searchParams }) {
         style={{ backgroundImage: "url('/background-image/Pet.png')" }}
       />
       <div className="absolute inset-0 bg-[#edf4e9]/70" />
+      <AuthPetRunner />
       <LoginForm initialError={initialError} initialSuccess={initialSuccess} />
     </main>
   );

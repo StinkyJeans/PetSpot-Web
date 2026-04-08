@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { updatePasswordAfterRecovery } from "@/app/auth/actions";
-import { ArrowRight, Password } from "griddy-icons";
+import { ArrowRight, Eye, EyeOff, Password } from "griddy-icons";
 
 const initialState = { error: "" };
 
@@ -35,10 +35,11 @@ export default function ResetPasswordForm() {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="shrink-0 cursor-pointer text-xs font-semibold text-emerald-800 hover:text-emerald-950"
+            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 text-emerald-800 hover:bg-emerald-800/10 hover:text-emerald-950"
+            aria-pressed={showPassword}
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? "Hide" : "Show"}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-[#f4f8f1] px-3">
@@ -55,10 +56,11 @@ export default function ResetPasswordForm() {
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
-            className="shrink-0 cursor-pointer text-xs font-semibold text-emerald-800 hover:text-emerald-950"
+            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 text-emerald-800 hover:bg-emerald-800/10 hover:text-emerald-950"
+            aria-pressed={showConfirm}
             aria-label={showConfirm ? "Hide password" : "Show password"}
           >
-            {showConfirm ? "Hide" : "Show"}
+            {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
         {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}

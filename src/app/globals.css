@@ -63,3 +63,69 @@ button:disabled,
   width: 0;
   height: 0;
 }
+
+/* Decorative dog runner — `position: fixed` + horizontal insets so patrol matches viewport side margins (your “black lines”). */
+@keyframes auth-dog-lr-rl {
+  0% {
+    left: 0%;
+    transform: translate3d(calc(-100% - 24px), 0, 0) scaleX(1);
+  }
+  49.5% {
+    left: 100%;
+    transform: translate3d(calc(-100% - 24px), 0, 0) scaleX(1);
+  }
+  50% {
+    left: 100%;
+    transform: translate3d(calc(-100% - 24px), 0, 0) scaleX(-1);
+  }
+  100% {
+    left: 0%;
+    transform: translate3d(calc(-100% - 24px), 0, 0) scaleX(-1);
+  }
+}
+
+.auth-pet-runner {
+  --dog-edge: clamp(10px, 1.1vw, 24px);
+  position: fixed;
+  bottom: 0;
+  left: max(var(--dog-edge), env(safe-area-inset-left, 0px));
+  right: max(var(--dog-edge), env(safe-area-inset-right, 0px));
+  z-index: 5;
+  height: clamp(80px, 16vh, 132px);
+  overflow: hidden;
+  opacity: 0.72;
+}
+
+.auth-pet-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.auth-pet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  width: max-content;
+  height: clamp(64px, 14vh, 120px);
+  align-items: flex-end;
+  transform-origin: center bottom;
+  animation: auth-dog-lr-rl 18s linear infinite;
+  will-change: left, transform;
+}
+
+.auth-pet-img {
+  height: 100%;
+  width: auto;
+  max-width: min(28vw, 200px);
+  object-fit: contain;
+  object-position: bottom;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-pet {
+    animation-duration: 48s;
+  }
+}
